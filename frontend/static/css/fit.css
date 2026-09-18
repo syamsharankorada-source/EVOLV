@@ -1,0 +1,273 @@
+/* ========================================
+   EVOLV — Swiss Noir Theme
+   Page canvas: #F2F2F2 (off-white)
+   Cards/panels: #0E0E0E / #161616 (black) — "black cards on white"
+   Display font: Clash Display (headlines, stat numbers, CTAs)
+   Body font:    Satoshi (everything else)
+   No shadows. No transitions. Depth = borders + contrast, not blur/motion.
+   ======================================== */
+
+:root {
+    --font-body: 'Clash Display', 'Helvetica Neue', Arial, sans-serif;
+    --font-display: 'Clash Display', 'Helvetica Neue', Arial, sans-serif;
+/* Base — page canvas is light; individual bg-dark/bg-surface cards
+   (already black) carry their own text colors and stay unaffected. */
+body {
+    background-color: #F2F2F2;
+    color: #111111;
+    font-family: var(--font-body);
+}
+
+/* Headlines and every place the app already goes to font-black (page
+   titles, stat numbers, big CTAs) switch to Clash Display — the same
+   heavy geometric grotesk used site-wide for headline moments. */
+h1, h2, h3, h4, h5, h6,
+.font-black {
+    font-family: var(--font-display) !important;
+    letter-spacing: -0.03em;
+}
+
+/* Nav bar — Clash Display */
+nav, nav .font-black {
+    --font-body: 'Clash Display', 'Helvetica Neue', Arial, sans-serif;
+    --font-display: 'Clash Display', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Timer / session-clock digits — stay in the body face, no separate
+   monospace substitution. */
+.font-mono {
+    font-family: var(--font-body);
+}
+
+/* ========================================
+   Echo Stack — layered offset headline effect.
+   Usage: <h1 class="echo-stack" data-text="JOURNEYS">JOURNEYS</h1>
+   The visible layer is the real element (full black); 4 background
+   copies are drawn from ::before/::after + nested spans via attr(),
+   each nudged and lightened, exactly like the reference mark.
+   ======================================== */
+.echo-stack {
+    position: relative;
+    display: inline-block;
+    color: #111111;
+}
+.echo-stack::before,
+.echo-stack::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: -1;
+    pointer-events: none;
+    white-space: nowrap;
+}
+.echo-stack::before {
+    color: #d9d9d9;
+    transform: translate(-0.16em, -0.16em);
+}
+.echo-stack::after {
+    color: #c9c9c9;
+    transform: translate(-0.09em, -0.09em);
+}
+.echo-stack .echo-mid {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: -1;
+    color: #bfbfbf;
+    transform: translate(-0.12em, -0.12em);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* ========================================
+   Hard reset: no shadows, no transitions, anywhere.
+   Keyframe animations (spinners, live-status pulses) are left alone —
+   those are functional state indicators, not decorative motion.
+   ======================================== */
+* {
+    box-shadow: none !important;
+    transition: none !important;
+}
+
+/* Apply Clash Display universally to all text elements */
+body, h1, h2, h3, h4, h5, h6, p, span, a, div, li, ul, ol, td, th, label {
+    font-family: 'Clash Display', 'Helvetica Neue', Arial, sans-serif;
+}
+
+input, button, select, textarea, h1, h2, h3, h4, h5, h6, .font-black {
+    font-family: 'Clash Display', 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+/* =======================================================
+   Font Awesome Icons Preservation
+   Ensure all icon glyphs retain Font Awesome font-family
+   and never fall back to emoji/smiley characters
+   ======================================================= */
+.fa,
+.fas,
+.far,
+.fal,
+.fad,
+.fab,
+.fa-solid,
+.fa-regular,
+.fa-brands,
+[class*="fa-"],
+[class*="fa-"]::before,
+[class*="fa-"]::after,
+i[class*="fa-"],
+i.fa,
+i.fas,
+i.far,
+i.fab {
+    font-family: "Font Awesome 6 Free" !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    line-height: 1 !important;
+}
+
+.fab,
+.fa-brands,
+[class*="fa-brands"],
+[class*="fa-brands"]::before {
+    font-family: "Font Awesome 6 Brands" !important;
+}
+
+.far,
+.fa-regular {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 400 !important;
+}
+
+.fas,
+.fa-solid {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3a3a3a;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #545454;
+}
+
+/* Form animation dot */
+@keyframes form-point {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.5; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.form-point-anim {
+    animation: form-point 2s infinite;
+}
+
+/* Hide scrollbar for tabs */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Input overrides */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ---------------------------------------------------- */
+/* Nutrition page - meal cards fix (side by side instead of vertical scroll) */
+/* ---------------------------------------------------- */
+
+#full-nutrition-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+#full-nutrition-list > div {
+    width: 100%;
+}
+
+/* the inner row that holds Breakfast / Lunch / Dinner cards */
+#full-nutrition-list > div > div:last-child {
+    display: flex;
+    flex-wrap: wrap;
+    overflow-x: visible;
+    gap: 1rem;
+}
+
+#full-nutrition-list > div > div:last-child > div {
+    flex: 1 1 220px;
+    max-width: none;
+    min-width: 220px;
+}
+
+@media (max-width: 640px) {
+    #full-nutrition-list > div > div:last-child {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+    #full-nutrition-list > div > div:last-child > div {
+        flex: 0 0 200px;
+    }
+}
+
+/* ---------------------------------------------------- */
+/* Card hover — noir treatment: border brightens instantly on hover,
+   no lift, no shadow, no easing. State changes snap, they don't animate. */
+/* ---------------------------------------------------- */
+
+.evolv-card {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.evolv-card:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+[data-tip] {
+    position: relative;
+    cursor: pointer;
+}
+
+[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    background: #161616;
+    color: #f2f2f2;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: 500;
+    white-space: normal;
+    width: max-content;
+    max-width: 260px;
+    text-align: left;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 60;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
+    transition: opacity 0.15s ease-in-out;
+}
+
+[data-tip]:hover::after {
+    opacity: 1;
+}

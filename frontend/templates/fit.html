@@ -1,0 +1,1857 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVOLV - Smart Fitness Analytics</title>
+    <!-- Local & CDN Font Awesome (Vector SVG Engine + Local WebFonts) -->
+    <link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="{% static 'js/fontawesome.min.js' %}"></script>
+
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/fit.css' %}?v=5.0">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style>
+        /* Permanent icon defense: Font Awesome icons must NEVER inherit text font */
+        .fa, .fas, .far, .fal, .fad, .fab, .fa-solid, .fa-regular, .fa-brands,
+        [class*="fa-"], [class*="fa-"]::before, [class*="fa-"]::after,
+        i[class*="fa-"], i.fa, i.fas, i.far, i.fab {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands", "FontAwesome" !important;
+            font-style: normal !important;
+            font-variant: normal !important;
+            text-rendering: auto !important;
+            line-height: 1 !important;
+        }
+        .fab, .fa-brands, [class*="fa-brands"], [class*="fa-brands"]::before {
+            font-family: "Font Awesome 6 Brands" !important;
+        }
+        .fas, .fa-solid {
+            font-family: "Font Awesome 6 Free" !important;
+            font-weight: 900 !important;
+        }
+        .far, .fa-regular {
+            font-family: "Font Awesome 6 Free" !important;
+            font-weight: 400 !important;
+        }
+        svg.svg-inline--fa {
+            display: inline-block;
+            height: 1em;
+            vertical-align: -0.125em;
+            overflow: visible;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#F2F2F2',
+                        'primary-dark': '#D9D9D9',
+                        secondary: '#8A8A8A',
+                        dark: '#0E0E0E',
+                        surface: '#161616',
+                        canvas: '#F2F2F2'
+                    },
+                    fontFamily: {
+                        sans: ['Clash Display', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                        display: ['Clash Display', 'Helvetica Neue', 'Arial', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-canvas text-dark font-sans antialiased min-h-screen flex flex-col selection:bg-dark selection:text-canvas">
+
+    <div id="toast-container" class="fixed top-20 right-5 z-50 space-y-2 pointer-events-none" aria-live="polite"></div>
+
+    <!-- AUTH MODAL -->
+    <div id="auth-modal" class="fixed inset-0 z-50 bg-black/80 hidden flex items-center justify-center p-4">
+        <div class="bg-surface border border-gray-700 rounded-3xl max-w-sm w-full p-8 shadow-2xl relative smooth-dropdown">
+            <button onclick="app.closeAuth()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <div class="text-center mb-6">
+                <i class="fas fa-paw text-primary text-4xl mb-3"></i>
+                <h2 class="text-2xl font-black text-white" data-i18n="auth_welcome">Welcome Back</h2>
+                <p class="text-xs text-gray-400 mt-1" data-i18n="auth_signin_sub">Sign in with Phone or Email</p>
+            </div>
+            <div id="auth-step-1">
+                <input type="text" id="auth-identifier" data-i18n="auth_phone_placeholder" data-i18n-attr="placeholder" placeholder="Phone Number or Email" class="w-full p-3.5 rounded-xl border border-gray-600 bg-gray-800 text-white placeholder-gray-500 mb-4 focus:border-primary outline-none transition-all">
+                <button onclick="app.sendOTP()" class="w-full py-3.5 bg-primary text-dark font-bold rounded-xl hover:bg-primary-dark transition-all" data-i18n="auth_send_otp">Send OTP</button>
+
+                <div class="flex items-center gap-3 my-5">
+                    <div class="flex-1 h-px bg-gray-700"></div>
+                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest" data-i18n="auth_or">or</span>
+                    <div class="flex-1 h-px bg-gray-700"></div>
+                </div>
+
+                <button onclick="app.closeAuth(); app.startOnboarding();" class="w-full py-3.5 bg-gray-800 border border-gray-700 text-white font-bold rounded-xl hover:bg-gray-700 transition-all mb-3">
+                    <i class="fas fa-user-plus mr-2"></i> <span data-i18n="auth_create_account">Create New Account</span>
+                </button>
+                <button onclick="app.guestLogin()" class="w-full py-3 text-gray-400 hover:text-white font-bold text-sm rounded-xl transition-all">
+                    <i class="fas fa-user-clock mr-2"></i> <span data-i18n="auth_guest">Continue as Guest</span>
+                </button>
+            </div>
+            <div id="auth-step-2" class="hidden">
+                <p class="text-xs text-gray-400 mb-4 text-center" data-i18n="auth_otp_hint">Enter 4-digit OTP sent to your device</p>
+                <div class="flex justify-center gap-3 mb-6">
+                    <input type="text" maxlength="1" id="otp-1" class="w-12 h-12 text-center text-xl font-bold border border-gray-600 bg-gray-800 text-white rounded-xl focus:border-primary outline-none otp-input transition-all">
+                    <input type="text" maxlength="1" id="otp-2" class="w-12 h-12 text-center text-xl font-bold border border-gray-600 bg-gray-800 text-white rounded-xl focus:border-primary outline-none otp-input transition-all">
+                    <input type="text" maxlength="1" id="otp-3" class="w-12 h-12 text-center text-xl font-bold border border-gray-600 bg-gray-800 text-white rounded-xl focus:border-primary outline-none otp-input transition-all">
+                    <input type="text" maxlength="1" id="otp-4" class="w-12 h-12 text-center text-xl font-bold border border-gray-600 bg-gray-800 text-white rounded-xl focus:border-primary outline-none otp-input transition-all">
+                </div>
+                <button onclick="app.verifyOTP()" class="w-full py-3.5 bg-gray-700 text-white font-bold rounded-xl hover:bg-gray-600 transition-all">Verify & Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORM CORRECTOR MODAL (z-[60]: must always render above the workout-session modal, since
+         "Form Fix" is opened from inside that modal without closing it) -->
+    <div id="form-corrector-modal" class="fixed inset-0 z-[60] bg-black/90 hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-4xl bg-surface rounded-3xl overflow-hidden relative shadow-2xl border border-gray-700">
+            <div class="flex justify-between items-center px-6 py-4 border-b border-gray-800">
+                <div class="flex items-center gap-3">
+                    <span class="bg-red-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-full animate-pulse"><i class="fas fa-circle text-[8px] mr-1"></i> LIVE ANALYSIS</span>
+                    <select id="fc-exercise-select" onchange="FormCorrector.updateExercise(this.value)" class="bg-gray-800 border border-gray-700 text-white text-sm font-bold rounded-lg px-3 py-2 outline-none">
+                        <option value="pushup">Push-up</option>
+                        <option value="squat">Squat</option>
+                        <option value="bicep_curl">Bicep Curl</option>
+                        <option value="lunge">Lunge</option>
+                        <option value="shoulder_press">Shoulder Press</option>
+                        <option value="situp">Sit-up</option>
+                    </select>
+                </div>
+                <button onclick="app.closeFormCorrector()" class="bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-700 border border-gray-600 transition-all"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="relative h-[55vh] bg-black flex items-center justify-center overflow-hidden">
+                <video id="fc-video" class="absolute inset-0 w-full h-full object-contain -scale-x-100" playsinline muted></video>
+                <canvas id="fc-canvas" class="absolute inset-0 w-full h-full -scale-x-100"></canvas>
+                <p id="fc-error" class="hidden absolute bottom-6 left-6 right-6 bg-red-500/90 text-white text-sm font-bold p-4 rounded-xl text-center"></p>
+            </div>
+
+            <div class="p-5 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-900">
+                <div class="text-center sm:text-left">
+                    <p class="text-xs text-gray-400 uppercase tracking-widest">Exercise</p>
+                    <p id="fc-dom-exercise" class="text-lg font-black text-white">Push-up</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-400 uppercase tracking-widest">Stage</p>
+                    <p id="fc-dom-stage" class="text-sm font-black text-gray-300">—</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-400 uppercase tracking-widest">Posture</p>
+                    <p id="fc-dom-posture" class="text-sm font-black text-emerald-400">Good Posture</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-400 uppercase tracking-widest">Reps <span class="normal-case text-gray-600">(good form only)</span></p>
+                    <p id="fc-dom-reps" class="text-3xl font-black text-primary">0</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="FormCorrector.resetReps()" class="px-5 py-3 bg-gray-800 border border-gray-700 text-white font-bold rounded-xl hover:bg-gray-700 transition-all text-sm"><i class="fas fa-rotate-left mr-2"></i>Reset</button>
+                    <button id="fc-ask-kang-btn" onclick="FormCorrector.askKang()" class="px-5 py-3 bg-primary text-dark font-bold rounded-xl hover:bg-primary-dark transition-all text-sm"><i class="fas fa-robot mr-2"></i>Ask KANG for Feedback</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCANNER MODAL -->
+    <div id="scanner-modal" class="fixed inset-0 z-50 bg-black/90 hidden flex flex-col items-center justify-center p-4">
+        <h3 class="text-white font-black mb-2 text-3xl" id="scanner-title">AI Scanner</h3>
+        <p class="text-gray-400 text-sm mb-8 text-center max-w-md" id="scanner-desc">Align the food within the frame.</p>
+        <div class="w-full max-w-md h-[50vh] border-2 border-primary/50 border-dashed rounded-3xl relative flex items-center justify-center bg-gray-900 overflow-hidden">
+            <video id="scanner-video" class="absolute inset-0 w-full h-full object-cover hidden" playsinline muted></video>
+            <canvas id="scanner-canvas" class="hidden"></canvas>
+            <i id="scanner-placeholder-icon" class="fas fa-camera text-gray-700 text-6xl"></i>
+            <div id="scanner-result" class="hidden absolute inset-0 bg-black/85 flex flex-col items-center justify-center p-6 text-center">
+                <i class="fas fa-check-circle text-emerald-400 text-4xl mb-3"></i>
+                <p id="scanner-result-name" class="text-white font-black text-xl mb-2"></p>
+                <p id="scanner-result-macros" class="text-gray-300 text-sm"></p>
+            </div>
+        </div>
+        <p id="scanner-error" class="hidden text-red-400 text-sm mt-4 text-center max-w-md"></p>
+        <div class="flex gap-4 mt-8">
+            <button onclick="UI.closeScanner()" class="px-8 py-3.5 bg-gray-800 border border-gray-700 text-white font-bold rounded-xl hover:bg-gray-700 transition-all">Cancel</button>
+            <button id="scanner-capture-btn" onclick="app.processScan()" class="px-8 py-3.5 bg-primary text-dark font-bold rounded-xl hover:bg-primary-dark transition-transform"><i class="fas fa-expand mr-2"></i> Capture & Analyze</button>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- NAVBAR (Horizontal)                            -->
+    <!-- ============================================== -->
+    <nav class="bg-surface/95 backdrop-blur-md border-b border-gray-800 fixed w-full top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center cursor-pointer shrink-0" onclick="app.navigate('landing')">
+                    <img src="{% static 'images/logo_white.png' %}" alt="EVOLV" class="h-9 w-auto object-contain">
+                </div>
+
+                <!-- Desktop Horizontal Navigation Links -->
+                <div class="hidden md:flex items-center space-x-1" id="nav-desktop-menu"></div>
+
+                <!-- Mobile Hamburger Button -->
+                <div class="flex items-center md:hidden">
+                    <button id="mobile-menu-btn" onclick="UI.toggleMobileMenu()" class="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-surface border-b border-gray-800 px-4 pt-2 pb-4 space-y-1 shadow-2xl"></div>
+    </nav>
+
+    <main class="flex-grow pt-16">
+
+        <!-- LANDING VIEW -->
+        <section id="view-landing" class="view-section active">
+            <div class="relative py-16 md:py-24 border-b border-dark/10">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
+                        <div class="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-dark/5 text-dark mb-6 border border-dark/15">
+                                <i class="fas fa-microchip mr-2"></i> <span data-i18n="landing_badge">Your Personal AI Fitness Coach</span>
+                            </span>
+                            <h1 class="text-4xl sm:text-5xl md:text-6xl leading-[0.95] tracking-tight text-dark font-black">
+                                <span class="echo-stack" data-text="Fitness Redifined" data-i18n="landing_h1_line1">Fitness Redefined</span><br>
+                                <span class="text-dark/35" data-i18n="landing_h1_line2">with AI.</span>
+                            </h1>
+                            <p class="mt-4 text-base text-dark/60 sm:text-lg" data-i18n="landing_subtext">
+                                Personalized workouts, real nutrition guidance, and KANG — your personal AI coach — all in one simple place.
+                            </p>
+                            <div class="mt-8 sm:flex sm:justify-center lg:justify-start gap-4">
+                                <button onclick="app.openAuth()" class="w-full sm:w-auto px-8 py-3.5 border border-dark/20 font-bold rounded-xl text-dark hover:bg-dark hover:text-canvas" data-i18n="landing_login">
+                                    Login / Sign In
+                                </button>
+                                <button onclick="app.startOnboarding()" class="mt-4 sm:mt-0 w-full sm:w-auto px-8 py-3.5 font-bold rounded-xl text-canvas bg-dark hover:bg-black">
+                                    <span data-i18n="landing_setup">Setup New Profile</span> <i class="fas fa-arrow-right ml-2 text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-16 lg:mt-0 lg:col-span-6">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+                <!-- ONBOARDING SECTION -->
+        <section id="view-onboarding" class="view-section hidden py-12">
+            <div class="max-w-2xl mx-auto px-4">
+                <div class="bg-surface rounded-3xl p-8 border border-blue-900/60 shadow-2xl overflow-hidden relative">
+                    <div class="bg-slate-800 h-1.5 w-full absolute top-0 left-0">
+                        <div id="onboarding-progress-bar" class="bg-primary h-1.5 transition-all duration-300" style="width: 10%;"></div>
+                    </div>
+                    <div class="flex justify-between items-center mb-8 mt-2">
+                        <span id="onboarding-step-indicator" class="text-xs font-bold uppercase tracking-widest text-slate-400">Step 1 of 10</span>
+                        <span class="text-xs text-secondary font-bold uppercase tracking-widest">EVOLV Setup</span>
+                    </div>
+                    <form id="onboarding-form" onsubmit="return false;">
+                        
+                        <!-- STEP 1: Help us create the perfect plan for you -->
+                        <div id="ob-step-1" class="ob-step">
+                            <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Help us create the perfect plan for you</h2>
+                            <p class="text-xs sm:text-sm text-slate-400 mb-6">Answer a few quick questions to get started. We'll use this information to personalize the app and tailor workouts to your goals.</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Phone Number or Email</label>
+                                    <input type="text" id="ob-phone" placeholder="e.g. 9876543210 or athlete@evolv.fit" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Full Name</label>
+                                    <input type="text" id="ob-name" placeholder="e.g. Alex Hunter" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all">
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Gender</label>
+                                        <select id="ob-gender" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="male">Man</option>
+                                            <option value="female">Woman</option>
+                                            <option value="other">Other / Non-binary</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Age group</label>
+                                        <select id="ob-age-group" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="teen">Teen (<19 years)</option>
+                                            <option value="twenties" selected>20 - 29 years</option>
+                                            <option value="thirties">30 - 39 years</option>
+                                            <option value="forties">40 - 49 years</option>
+                                            <option value="fifty_plus">50+ years</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Height (cm)</label>
+                                        <input type="number" id="ob-height" value="175" min="80" max="250" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Weight (kg)</label>
+                                        <input type="number" id="ob-weight" value="72" min="20" max="250" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 2: Goals (Matching Screenshot 4) -->
+                        <div id="ob-step-2" class="ob-step hidden">
+                            <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Goal</h2>
+                            <p class="text-xs sm:text-sm text-slate-400 mb-6">Tell us what you want to achieve by using the app.</p>
+                            
+                            <div class="space-y-3" id="goals-checkbox-group">
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="goals" value="burn_fat" checked class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Burn fat</span>
+                                    </div>
+                                    <i class="fas fa-fire text-white text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="goals" value="increase_endurance" checked class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Increase endurance</span>
+                                    </div>
+                                    <i class="fas fa-running text-white text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="goals" value="reduce_stress" checked class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Reduce stress</span>
+                                    </div>
+                                    <i class="fas fa-spa text-white text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="goals" value="sleep_better" checked class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Sleep better</span>
+                                    </div>
+                                    <i class="fas fa-moon text-white text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="goals" value="live_healthier" checked class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Live healthier</span>
+                                    </div>
+                                    <i class="fas fa-heartbeat text-white text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="goals" value="build_muscle" checked class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Build muscle</span>
+                                    </div>
+                                    <i class="fas fa-dumbbell text-white text-sm"></i>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- STEP 3: Equipment (Matching Screenshot 2) -->
+                        <div id="ob-step-3" class="ob-step hidden">
+                            <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Equipment</h2>
+                            <p class="text-xs sm:text-sm text-slate-400 mb-6">Select your equipment so we will be able to fill training sets with appropriate exercises. You can change equipment any time.</p>
+                            
+                            <div class="space-y-3" id="equipment-checkbox-group">
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="equipment" value="barbell" class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Barbell</span>
+                                    </div>
+                                    <i class="fas fa-weight-hanging text-slate-500 text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="equipment" value="dumbbells" checked class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Dumbbells</span>
+                                    </div>
+                                    <i class="fas fa-dumbbell text-white text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="equipment" value="bench" class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Bench</span>
+                                    </div>
+                                    <i class="fas fa-chair text-slate-500 text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="equipment" value="pull_up_bar" class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Pull-up bar</span>
+                                    </div>
+                                    <i class="fas fa-grip-lines text-slate-500 text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="equipment" value="other_gym" checked class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Other (Gym)</span>
+                                    </div>
+                                    <i class="fas fa-building text-white text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="equipment" value="bodyweight" checked class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Bodyweight Only</span>
+                                    </div>
+                                    <i class="fas fa-child text-white text-sm"></i>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- STEP 4: Fitness & Experience -->
+                        <div id="ob-step-4" class="ob-step hidden">
+                            <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Fitness Experience</h2>
+                            <p class="text-xs sm:text-sm text-slate-400 mb-6">Let us know your training background and workout preferences.</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Current Fitness Level</label>
+                                    <select id="ob-fitness-level" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="beginner">Beginner (New to consistent exercise)</option>
+                                        <option value="intermediate" selected>Intermediate (1-2 years experience)</option>
+                                        <option value="advanced">Advanced (3+ years consistent lifting/training)</option>
+                                    </select>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Primary Workout Location</label>
+                                        <select id="ob-location" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="home">Home</option>
+                                            <option value="gym" selected>Commercial Gym</option>
+                                            <option value="outdoor">Outdoor / Calisthenics Park</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Preferred Duration (Mins)</label>
+                                        <select id="ob-duration" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="20">20 - 30 minutes (Quick)</option>
+                                            <option value="45" selected>40 - 50 minutes (Standard)</option>
+                                            <option value="60">60+ minutes (Comprehensive)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 5: Lifestyle & Wellness -->
+                        <div id="ob-step-5" class="ob-step hidden">
+                            <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Lifestyle & Wellness</h2>
+                            <p class="text-xs sm:text-sm text-slate-400 mb-6">Your daily habits help EVOLV calculate accurate calorie burn and recovery needs.</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Daily Activity Level</label>
+                                    <select id="ob-activity-level" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="sedentary">Sedentary (Desk job, minimal daily movement)</option>
+                                        <option value="light">Lightly Active (Light walking, light chores)</option>
+                                        <option value="moderate" selected>Moderately Active (Active during day, on feet)</option>
+                                        <option value="very_active">Very Active (Heavy manual work or athlete)</option>
+                                    </select>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Average Sleep</label>
+                                        <select id="ob-sleep" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="under_6">Under 6 hours</option>
+                                            <option value="6_7">6 - 7 hours</option>
+                                            <option value="7_8" selected>7 - 8 hours</option>
+                                            <option value="over_8">8+ hours</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Sitting Time / Day</label>
+                                        <select id="ob-sitting-time" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="low">Under 4 hours</option>
+                                            <option value="moderate" selected>4 - 7 hours</option>
+                                            <option value="high">8+ hours</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Daily Water Target (ml)</label>
+                                    <select id="ob-water-target" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="2000">2,000 ml (~8 glasses)</option>
+                                        <option value="2500" selected>2,500 ml (~10 glasses)</option>
+                                        <option value="3000">3,000 ml (~12 glasses)</option>
+                                        <option value="3500">3,500 ml (~14 glasses)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 6: Dietary Preferences -->
+                        <div id="ob-step-6" class="ob-step hidden">
+                            <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Dietary Preferences</h2>
+                            <p class="text-xs sm:text-sm text-slate-400 mb-6">Customize your nutrition meal plan and macro recommendations.</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Primary Diet</label>
+                                    <select id="ob-diet" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="non_vegetarian" selected>Non-Vegetarian (Chicken, Fish, Eggs, Meat)</option>
+                                        <option value="vegetarian">Vegetarian (Dairy, Plant-based, Pulses)</option>
+                                        <option value="eggetarian">Eggetarian (Vegetarian + Eggs)</option>
+                                        <option value="vegan">Vegan (Strict 100% Plant-based)</option>
+                                        <option value="keto">Keto / Low-Carb</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Allergies / Foods to Avoid</label>
+                                    <input type="text" id="ob-allergies" placeholder="e.g. Peanuts, Gluten, Dairy, Shellfish" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Meals per Day</label>
+                                    <select id="ob-meals-per-day" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="2">2 Meals (Intermittent Fasting)</option>
+                                        <option value="3" selected>3 Standard Meals (Breakfast, Lunch, Dinner)</option>
+                                        <option value="4">4 Meals (3 Main Meals + 1 Snack)</option>
+                                        <option value="5">5 Small Frequent Meals</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 7: Physical Limitations & Health -->
+                        <div id="ob-step-7" class="ob-step hidden">
+                            <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Physical Limitations</h2>
+                            <p class="text-xs sm:text-sm text-slate-400 mb-6">Tell us about any joint discomfort or past injuries so KANG can adapt exercise suggestions.</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Joint / Body Discomfort</label>
+                                    <select id="ob-limitations" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="none" selected>None (Ready for all movements)</option>
+                                        <option value="knee_discomfort">Knee Discomfort / Sensitive knees</option>
+                                        <option value="back_discomfort">Lower Back Discomfort</option>
+                                        <option value="shoulder_discomfort">Shoulder Impingement / Mobility limit</option>
+                                        <option value="wrist_discomfort">Wrist Strain</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Specific Injury or Health Note (Optional)</label>
+                                    <input type="text" id="ob-injury" placeholder="e.g. ACL surgery in 2023, Avoid heavy overhead press" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 8: Workout Schedule & Target Weight -->
+                        <div id="ob-step-8" class="ob-step hidden">
+                            <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Schedule & Target</h2>
+                            <p class="text-xs sm:text-sm text-slate-400 mb-6">Define your weekly workout frequency and long-term milestone.</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Workout Days per Week</label>
+                                    <select id="ob-workout-days" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="2">2 Days / Week (Light)</option>
+                                        <option value="3">3 Days / Week (Full Body Split)</option>
+                                        <option value="4" selected>4 Days / Week (Upper / Lower Split)</option>
+                                        <option value="5">5 Days / Week (Push / Pull / Legs)</option>
+                                        <option value="6">6 Days / Week (Advanced High Frequency)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Target Goal Weight (kg, optional)</label>
+                                    <input type="number" id="ob-target-weight" placeholder="e.g. 68" min="20" max="250" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 9: Wearable Connection -->
+                        <div id="ob-step-9" class="ob-step hidden">
+                            <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Device & Tracker</h2>
+                            <p class="text-xs sm:text-sm text-slate-400 mb-6">Link your smartwatch, fitness band, or smartphone to sync heart rate, steps, and sleep.</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Do you use a fitness band or smartwatch?</label>
+                                    <select id="ob-wearable" class="w-full rounded-2xl border border-blue-900/60 bg-dark p-4 text-sm text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="apple_watch">Apple Watch (Series 8/9/Ultra/SE)</option>
+                                        <option value="fitbit">Fitbit (Charge, Sense, Versa)</option>
+                                        <option value="garmin">Garmin (Forerunner, Venu, Fenix)</option>
+                                        <option value="samsung">Samsung Galaxy Watch</option>
+                                        <option value="mi_band">Mi Band / Amazfit</option>
+                                        <option value="noise_boat">Noise / Boat Smartwatch</option>
+                                        <option value="iphone">iPhone (Health App)</option>
+                                        <option value="android_phone">Android Phone (Google Fit / Samsung Health)</option>
+                                        <option value="none" selected>No Device</option>
+                                    </select>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-dark/80 border border-blue-900/40 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <i class="fab fa-bluetooth text-primary text-xl"></i>
+                                        <div>
+                                            <p class="text-xs font-bold text-white">Live Device Connection</p>
+                                            <p class="text-[10px] text-slate-400">You can also pair Bluetooth / QR code anytime from Progress.</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] bg-primary/20 text-blue-300 font-bold px-2.5 py-1 rounded-full border border-primary/30">Ready</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 10: Notifications (Matching Screenshot 1) -->
+                        <div id="ob-step-10" class="ob-step hidden">
+                            <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Notifications</h2>
+                            <p class="text-xs sm:text-sm text-slate-400 mb-6">Decide what notifications you want to receive. You can change these and other options in the app settings at any time.</p>
+                            
+                            <div class="space-y-3" id="notifications-checkbox-group">
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="notifications" value="training" checked class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Training notifications</span>
+                                    </div>
+                                    <i class="fas fa-bell text-white text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="notifications" value="weight_in" checked class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Weight-in notifications</span>
+                                    </div>
+                                    <i class="fas fa-weight text-white text-sm"></i>
+                                </label>
+                                <label class="cursor-pointer border border-white/10 bg-dark rounded-2xl p-4 flex items-center justify-between hover:border-white/50">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="notifications" value="watering" class="w-5 h-5 rounded text-white focus:ring-0 accent-white cursor-pointer">
+                                        <span class="text-sm font-bold text-white">Watering notifications</span>
+                                    </div>
+                                    <i class="fas fa-tint text-slate-500 text-sm"></i>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- NAVIGATION BUTTONS -->
+                        <div class="mt-8 flex justify-between items-center pt-6 border-t border-blue-900/40">
+                            <button type="button" id="ob-prev-btn" onclick="app.onboardingPrev()" class="hidden px-6 py-3.5 rounded-2xl border border-slate-700 bg-dark text-sm font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition-all">
+                                <i class="fas fa-arrow-left mr-2 text-xs"></i> Back
+                            </button>
+                            <div class="ml-auto flex gap-3">
+                                <button type="button" id="ob-next-btn" onclick="app.onboardingNext()" class="px-8 py-3.5 rounded-2xl bg-primary hover:bg-primary-dark text-dark text-sm font-black">
+                                    Next <i class="fas fa-chevron-right ml-2 text-xs"></i>
+                                </button>
+                                <button type="button" id="ob-submit-btn" onclick="app.completeOnboarding()" class="hidden px-8 py-3.5 rounded-2xl bg-secondary text-white hover:bg-teal-600 text-sm font-black transition-all shadow-lg shadow-teal-500/20">
+                                    Activate EVOLV <i class="fas fa-rocket ml-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- DEMO VIEW -->
+        <section id="view-demo" class="view-section hidden py-10">
+            <div class="max-w-6xl mx-auto px-4">
+                <div class="text-center max-w-2xl mx-auto mb-10 border-b border-dark/10 pb-6">
+                    <h2 class="text-3xl font-black text-dark">Pre-Configured Personas</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="demo-cards-container"></div>
+            </div>
+        </section>
+
+        <!-- DASHBOARD VIEW -->
+        <section id="view-dashboard" class="view-section hidden py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-surface rounded-3xl p-6 sm:p-8 border border-gray-800 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h2 class= "text-2xl sm:text-3xl font-black text-white" id="dash-greeting"></h2>
+                            <span id="dash-age-badge" class="px-3 py-1 bg-gray-800 text-primary border border-gray-700 text-xs font-bold rounded-full uppercase"></span>
+                        </div>
+                        <p class="text-gray-400 text-sm mt-2 font-medium" id="dash-summary-text"></p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button onclick="app.syncSmartwatch()" class="flex flex-col items-center text-gray-500 hover:text-white transition-all">
+                            <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-xl mb-1 border border-gray-700 transition-all"><i class="fas fa-stopwatch"></i></div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Sync</span>
+                        </button>
+                        <button onclick="app.startActiveWorkout()" class="px-6 py-3.5 bg-primary hover:bg-primary-dark text-dark text-sm font-black rounded-xl transition-all flex items-center">
+                            <i class="fas fa-play mr-2"></i> Start Workout
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="bg-surface rounded-3xl p-8 border border-gray-800">
+                            <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                                <h3 class="text-xl font-black text-white">Today's Workout Plan</h3>
+                                <button onclick="app.navigate('workouts')" class="text-primary hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">Details &rarr;</button>
+                            </div>
+                            <div id="dash-workout-preview" class="space-y-4"></div>
+                        </div>
+
+                        <div class="bg-surface rounded-3xl p-8 border border-gray-800">
+                            <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                                <h3 class="text-xl font-black text-white">Nutrition Snapshot</h3>
+                                <button onclick="app.navigate('nutrition')" class="text-primary hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">Scanner &rarr;</button>
+                            </div>
+                            <div id="dash-nutrition-preview" class="grid grid-cols-1 sm:grid-cols-3 gap-5"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-8">
+                        <div class="evolv-card bg-surface rounded-3xl p-8 border border-gray-800 text-center" data-tip="Keep logging workouts daily to grow your streak">
+                            <div class="w-20 h-20 rounded-full bg-gray-800 text-primary flex items-center justify-center text-3xl mx-auto mb-4 border border-gray-700">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                            <h4 class="text-3xl font-black text-white"><span id="dash-streak-count"></span> Day Streak</h4>
+                            <div class="mt-8 pt-6 border-t border-gray-800 flex justify-around text-center">
+                                <div>
+                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Workouts</p>
+                                    <p id="dash-total-workouts" class="font-black text-white text-2xl"></p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Total XP</p>
+                                    <p id="dash-total-xp" class="font-black text-primary text-2xl"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="evolv-card bg-surface rounded-3xl p-8 border border-gray-800" data-tip="Synced from your wearable or entered manually">
+                            <h3 class="text-lg font-black text-white mb-6 border-b border-gray-800 pb-4">Daily Log</h3>
+                            <div class="mb-6">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs font-bold text-gray-400 uppercase tracking-widest"><i class="fas fa-tint text-secondary mr-2"></i> Water</span>
+                                    <span id="dash-water-text" class="text-sm font-black text-white"></span>
+                                </div>
+                                <div class="w-full bg-gray-800 rounded-full h-2 mb-3">
+                                    <div id="dash-water-bar" class="bg-secondary h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div class="mb-6">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs font-bold text-gray-400 uppercase tracking-widest"><i class="fas fa-shoe-prints text-emerald-500 mr-2"></i> Steps</span>
+                                    <span id="dash-steps-text" class="text-sm font-black text-white"></span>
+                                </div>
+                                <div class="w-full bg-gray-800 rounded-full h-2 mb-3">
+                                    <div id="dash-steps-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-xs font-bold text-gray-400 uppercase tracking-widest"><i class="fas fa-moon text-indigo-500 mr-2"></i> Sleep</span>
+                                    <span id="dash-sleep-text" class="text-sm font-black text-white"></span>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button onclick="app.adjustSleep(-0.5)" class="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold rounded-xl transition-all border border-gray-700">-0.5h</button>
+                                    <button onclick="app.adjustSleep(0.5)" class="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold rounded-xl transition-all border border-gray-700">+0.5h</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SESSION MODALS -->
+        <div id="workout-session-modal" class="fixed inset-0 z-50 bg-black/90 hidden flex items-center justify-center p-4">
+            <div class="bg-surface border border-gray-700 rounded-3xl max-w-2xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
+                <button onclick="app.closeWorkoutSession()" class="absolute top-6 right-6 text-gray-500 hover:text-white text-2xl font-black transition-colors">&times;</button>
+                <div class="mb-8 border-b border-dark/10 pb-6">
+                    <span class="text-xs font-bold uppercase tracking-widest text-dark" id="session-phase-tag">Live Session</span>
+                    <h2 class="text-3xl font-black text-dark mt-2" id="session-workout-title"></h2>
+                    <div class="w-full bg-dark/10 rounded-full h-2 mt-6">
+                        <div id="session-progress-bar" class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div id="session-exercise-card" class="bg-dark rounded-3xl p-8 border border-gray-800 text-center mb-8">
+                    <span class="text-xs font-black px-4 py-1.5 bg-gray-800 border border-gray-700 rounded-full text-white uppercase tracking-widest" id="session-exercise-num"></span>
+                    <h3 class="text-3xl font-black text-white mt-6" id="session-ex-name"></h3>
+                    <p class="text-sm text-primary font-bold mt-2 tracking-widest uppercase" id="session-ex-target"></p>
+                    <!-- Athletic 2D Workout Demonstration Player -->
+                    <div class="w-full max-w-sm sm:max-w-md mx-auto my-6 bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-2xl flex flex-col items-center text-left">
+                        <!-- Top Bar: Form Status & 60fps Indicator -->
+                        <div class="w-full px-4 py-2.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between text-xs font-bold text-gray-500">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span class="tracking-widest uppercase text-[11px] font-black text-gray-800">2D Athletic Form Guide</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[11px] text-gray-500 font-semibold">
+                                <i class="fas fa-sync-alt text-[10px] text-primary"></i>
+                                <span>Controlled demo</span>
+                            </div>
+                        </div>
+                        <!-- Canvas Viewport -->
+                        <div class="w-full h-56 sm:h-64 bg-white flex items-center justify-center p-2 relative">
+                            <canvas id="session-hollowman-canvas" width="400" height="320" style="width:100%; height:100%; display:block;" data-exercise=""></canvas>
+                        </div>
+                        <!-- Interactive Playback Controls -->
+                        <div class="w-full px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="anim-play-pause-btn" onclick="HollowMan.togglePlay()" title="Play / Pause Demonstration" class="w-8 h-8 rounded-xl bg-white border border-gray-200 hover:border-gray-300 text-gray-800 hover:bg-gray-100 active:scale-95 flex items-center justify-center shadow-xs transition-all text-xs font-bold">
+                                    <i class="fas fa-pause text-gray-700" id="anim-play-icon"></i>
+                                </button>
+                                <button type="button" id="anim-restart-btn" onclick="HollowMan.restart()" title="Restart Rep Cycle" class="w-8 h-8 rounded-xl bg-white border border-gray-200 hover:border-gray-300 text-gray-800 hover:bg-gray-100 active:scale-95 flex items-center justify-center shadow-xs transition-all text-xs font-bold">
+                                    <i class="fas fa-undo text-gray-600"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200 shadow-xs" id="anim-speed-selector">
+                                <button type="button" onclick="HollowMan.setSpeed(0.5)" data-speed="0.5" class="anim-speed-pill px-2 py-0.5 text-[11px] font-black rounded-lg text-gray-500 hover:text-gray-900 transition-colors">0.5x</button>
+                                <button type="button" onclick="HollowMan.setSpeed(0.75)" data-speed="0.75" class="anim-speed-pill px-2 py-0.5 text-[11px] font-black rounded-lg text-gray-500 hover:text-gray-900 transition-colors">0.75x</button>
+                                <button type="button" onclick="HollowMan.setSpeed(1.0)" data-speed="1.0" class="anim-speed-pill px-2 py-0.5 text-[11px] font-black rounded-lg bg-gray-900 text-white shadow-xs">1x</button>
+                                <button type="button" onclick="HollowMan.setSpeed(1.25)" data-speed="1.25" class="anim-speed-pill px-2 py-0.5 text-[11px] font-black rounded-lg text-gray-500 hover:text-gray-900 transition-colors">1.25x</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="my-6">
+                        <div class="text-7xl font-black text-white font-mono" id="session-timer-display"></div>
+                        <p class="text-sm text-gray-400 mt-3 font-bold uppercase tracking-widest" id="session-ex-reps"></p>
+                    </div>
+                    <div class="text-left bg-gray-800 p-6 rounded-2xl border border-gray-700 text-sm space-y-3">
+                        <p id="session-ex-instructions" class="text-gray-300 font-medium"></p>
+                        <p id="session-ex-safety" class="text-red-400 font-bold"></p>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                    <button id="session-timer-toggle-btn" onclick="app.toggleWorkoutTimer()" class="flex-1 py-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold text-sm rounded-xl transition-all">
+                        <i class="fas fa-pause mr-1"></i> Pause
+                    </button>
+                    <button onclick="app.openFormCorrector()" class="flex-1 py-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold text-sm rounded-xl transition-all">
+                        <i class="fas fa-video text-primary mr-1"></i> Form Fix
+                    </button>
+                    <button onclick="app.nextExercise()" class="flex-1 py-4 bg-primary hover:bg-primary-dark text-dark font-black text-sm rounded-xl transition-all">
+                        Next <i class="fas fa-check ml-1"></i>
+                    </button>
+                </div>
+                <div class="flex justify-between px-2">
+                    <button onclick="app.replaceCurrentExercise()" class="text-xs text-gray-500 hover:text-primary font-bold uppercase tracking-widest transition-colors">Swap</button>
+                    <button onclick="app.finishWorkoutEarly()" class="text-xs text-red-500 hover:text-red-400 font-bold uppercase tracking-widest transition-colors">Finish Early</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="workout-feedback-modal" class="fixed inset-0 z-50 bg-black/90 hidden flex items-center justify-center p-4">
+            <div class="bg-surface rounded-3xl max-w-md w-full p-8 border border-gray-700 text-center">
+                <div class="w-20 h-20 bg-gray-800 text-primary text-4xl rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-700">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h3 class="text-3xl font-black text-white">Workout Done!</h3>
+                <p class="text-sm font-medium text-gray-400 mb-8 mt-2">How did it feel?</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="app.submitDifficultyFeedback('too_easy')" class="p-4 border border-gray-700 bg-gray-800 hover:border-primary rounded-xl text-sm font-bold text-white transition-all">Too Easy</button>
+                    <button onclick="app.submitDifficultyFeedback('comfortable')" class="p-4 border border-gray-700 bg-gray-800 hover:border-primary rounded-xl text-sm font-bold text-white transition-all">Comfort</button>
+                    <button onclick="app.submitDifficultyFeedback('challenging')" class="p-4 border border-gray-700 bg-gray-800 hover:border-primary rounded-xl text-sm font-bold text-white transition-all">Challenge</button>
+                    <button onclick="app.submitDifficultyFeedback('too_difficult')" class="p-4 border border-gray-700 bg-gray-800 hover:border-red-500 rounded-xl text-sm font-bold text-white transition-all">Too Hard</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KEYBOARD SHORTCUTS MODAL -->
+        <div id="shortcuts-modal" class="fixed inset-0 z-50 bg-black/80 hidden flex items-center justify-center p-4">
+            <div class="bg-surface border border-gray-700 rounded-3xl max-w-xl w-full p-6 sm:p-8 relative shadow-2xl">
+                <button onclick="Shortcuts.toggleModal(false)" class="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+                    <div class="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center text-lg">
+                        <i class="fas fa-keyboard"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-white" data-i18n="sc_title">Keyboard Shortcuts</h3>
+                        <p class="text-xs text-gray-400" data-i18n="sc_sub">Navigate EVOLV and run actions instantly</p>
+                    </div>
+                </div>
+
+                <div class="space-y-6 text-sm max-h-[65vh] overflow-y-auto pr-2">
+                    <!-- Navigation -->
+                    <div>
+                        <h4 class="text-xs font-bold text-primary uppercase tracking-widest mb-3" data-i18n="sc_nav">Navigation</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_dashboard">Dashboard</span>
+                                <div class="flex gap-1">
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">D</kbd>
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">1</kbd>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_kang">KANG AI Coach</span>
+                                <div class="flex gap-1">
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">K</kbd>
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">2</kbd>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_neuro">Neuro Readiness</span>
+                                <div class="flex gap-1">
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">N</kbd>
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">3</kbd>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_workouts">Workouts</span>
+                                <div class="flex gap-1">
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">W</kbd>
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">4</kbd>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_nutrition">Nutrition</span>
+                                <div class="flex gap-1">
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">U</kbd>
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">5</kbd>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_community">Community</span>
+                                <div class="flex gap-1">
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">C</kbd>
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">6</kbd>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_progress">Progress</span>
+                                <div class="flex gap-1">
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">P</kbd>
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">7</kbd>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_vibe">The Vibe</span>
+                                <div class="flex gap-1">
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">V</kbd>
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">9</kbd>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_settings">Settings</span>
+                                <div class="flex gap-1">
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">S</kbd>
+                                    <kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">8</kbd>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Global Quick Actions -->
+                    <div>
+                        <h4 class="text-xs font-bold text-primary uppercase tracking-widest mb-3" data-i18n="sc_actions">Quick Actions</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_start_workout">Start Workout</span>
+                                <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">X</kbd>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_reaction">Start CNS Reaction Test</span>
+                                <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">R</kbd>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_sync">Sync Smartwatch</span>
+                                <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">Y</kbd>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_show_shortcuts">Show Shortcuts Cheat Sheet</span>
+                                <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">?</kbd>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_close_modal">Close Any Active Modal</span>
+                                <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">ESC</kbd>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- In-Session Controls -->
+                    <div>
+                        <h4 class="text-xs font-bold text-primary uppercase tracking-widest mb-3" data-i18n="sc_session">During Active Session</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_tap_react">Tap / React (Reaction Test)</span>
+                                <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">Space / Enter</kbd>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_pause_resume">Pause / Resume Workout</span>
+                                <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">Space</kbd>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_next_ex">Next Exercise</span>
+                                <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">Enter / &rarr;</kbd>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                <span class="text-gray-300 font-medium" data-i18n="sc_form_fix">Form Fix Analysis</span>
+                                <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">F</kbd>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-gray-800 flex justify-between items-center text-xs text-gray-500">
+                    <span data-i18n="sc_footer">Shortcuts are paused while typing in form inputs.</span>
+                    <button onclick="Shortcuts.toggleModal(false)" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl border border-gray-700 transition-all" data-i18n="sc_close">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- WORKOUTS VIEW -->
+        <section id="view-workouts" class="view-section hidden py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-10 border-b border-dark/10 pb-6">
+                    <h2 class="text-3xl font-black text-dark">Workout Regimen</h2>
+                </div>
+                <div id="full-workout-list" class="space-y-4"></div>
+            </div>
+        </section>
+
+        <!-- NUTRITION VIEW -->
+        <section id="view-nutrition" class="view-section hidden py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-gray-800 pb-6">
+                    <div>
+                        <h2 class="text-3xl font-black text-dark">Nutrition Engine</h2>
+                        <p class="text-sm text-dark/60 mt-1 font-medium">Scan food to auto-calculate macros.</p>
+                    </div>
+                    <button onclick="app.openScanner('food')" data-tip="Best results in good light, food filling most of the frame" class="px-6 py-3 bg-primary text-dark font-bold rounded-xl hover:bg-primary-dark transition-all">
+                        <i class="fas fa-camera mr-2"></i> Snap Meal
+                    </button>
+                </div>
+
+                <div class="bg-surface p-8 rounded-3xl border border-gray-800 mb-8">
+                    <h3 class="text-xl font-black text-white mb-6">Today's Intake</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+                        <div class="flex flex-col items-center">
+                            <div class="relative w-28 h-28"><canvas id="donut-calories"></canvas>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="donut-calories-label" class="text-sm font-black text-white">0</span>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2">Calories</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="relative w-28 h-28"><canvas id="donut-protein"></canvas>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="donut-protein-label" class="text-sm font-black text-white">0g</span>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2">Protein</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="relative w-28 h-28"><canvas id="donut-carbs"></canvas>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="donut-carbs-label" class="text-sm font-black text-white">0g</span>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2">Carbs</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="relative w-28 h-28"><canvas id="donut-fats"></canvas>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="donut-fats-label" class="text-sm font-black text-white">0g</span>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2">Fats</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="relative w-28 h-28"><canvas id="donut-fiber"></canvas>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="donut-fiber-label" class="text-sm font-black text-white">0g</span>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2">Fiber</p>
+                        </div>
+                    </div>
+                    <div id="today-meals-list" class="mt-6 space-y-2"></div>
+                </div>
+
+                <div id="nutrition-disclaimer-box" class="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-8 text-xs font-medium text-gray-8000"></div>
+                <div id="full-nutrition-list" class="grid grid-cols-1 gap-6"></div>
+            </div>
+        </section>
+
+        <!-- RECIPE MODAL -->
+        <div id="recipe-modal" class="fixed inset-0 z-50 bg-black/80 hidden flex items-center justify-center p-4">
+            <div class="w-full max-w-lg bg-surface rounded-3xl border border-gray-700 p-8 relative max-h-[80vh] overflow-y-auto">
+                <button onclick="document.getElementById('recipe-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                <h3 id="recipe-dish-name" class="text-2xl font-black text-white mb-4 pr-8">Recipe</h3>
+                <div id="recipe-loading" class="text-center py-10 text-gray-400"><i class="fas fa-spinner fa-spin text-2xl mb-3"></i><p>KANG is putting the recipe together...</p></div>
+                <p id="recipe-content" class="hidden text-sm text-gray-300 leading-relaxed" style="white-space: pre-line;"></p>
+            </div>
+        </div>
+
+        <!-- FAMILY VIEW -->
+        <section id="view-community" class="view-section hidden py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-gray-800 pb-6">
+                    <div>
+                        <h2 class="text-3xl font-black text-dark">Community Hub</h2>
+                        <p class="text-sm text-dark/60 mt-1 font-medium">Find certified-by-self-report nutritionists & coaches, or share your own content.</p>
+                    </div>
+                    <div class="flex gap-2 bg-gray-900 border border-gray-800 rounded-xl p-1.5">
+                        <button id="community-tab-btn-coaches" onclick="Community.switchTab('coaches')" class="px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all bg-primary text-dark">Browse Coaches</button>
+                        <button id="community-tab-btn-feed" onclick="Community.switchTab('feed')" class="px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all text-gray-400 hover:text-white">Community Feed</button>
+                        <button id="community-tab-btn-mycoach" onclick="Community.switchTab('mycoach')" class="px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all text-gray-400 hover:text-white">My Coach Profile</button>
+                    </div>
+                </div>
+
+                <!-- BROWSE COACHES TAB -->
+                <div id="community-tab-coaches">
+                    <div class="flex gap-2 overflow-x-auto pb-2 mb-6 text-xs whitespace-nowrap scrollbar-hide">
+                        <button onclick="Community.filterCoaches('')" class="community-specialty-chip px-4 py-2 bg-primary text-dark rounded-lg font-bold" data-specialty="">All</button>
+                    </div>
+                    <div id="coaches-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <!-- COMMUNITY FEED TAB -->
+                <div id="community-tab-feed" class="hidden">
+                    <div class="flex justify-end mb-4">
+                        <button id="new-post-btn" onclick="Community.openNewPost()" class="hidden px-5 py-2.5 bg-primary text-dark text-sm font-bold rounded-xl hover:bg-primary-dark transition-all">
+                            <i class="fas fa-plus mr-1"></i> New Post
+                        </button>
+                    </div>
+                    <div id="posts-feed" class="space-y-4 max-w-3xl mx-auto"></div>
+                </div>
+
+                <!-- MY COACH PROFILE TAB -->
+                <div id="community-tab-mycoach" class="hidden max-w-2xl mx-auto">
+                    <div class="bg-surface rounded-3xl p-8 border border-gray-800">
+                        <h3 class="font-black text-xl text-white mb-1">Become a Community Coach</h3>
+                        <p class="text-xs text-gray-500 mb-6">Certifications are self-reported and shown as-is — we don't independently verify them.</p>
+                        <form onsubmit="Community.saveCoachProfile(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Specialty</label>
+                                <select id="coach-specialty" class="w-full rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white outline-none appearance-none"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Bio</label>
+                                <textarea id="coach-bio" rows="3" class="w-full rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white outline-none" placeholder="Tell people what you help with..."></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Years Experience</label>
+                                    <input type="number" id="coach-experience" min="0" max="60" class="w-full rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Certification (self-reported)</label>
+                                    <input type="text" id="coach-certification" placeholder="e.g. ACE-CPT" class="w-full rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white outline-none">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full py-3 bg-primary hover:bg-primary-dark text-dark font-bold text-sm rounded-xl transition-all">Save Coach Profile</button>
+                        </form>
+                    </div>
+
+                    <div class="bg-surface rounded-3xl p-8 border border-gray-800 mt-8">
+                        <h3 class="font-black text-xl text-white mb-4">Hire Requests You've Received</h3>
+                        <div id="my-hire-requests" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HIRE REQUEST MODAL -->
+        <div id="hire-modal" class="fixed inset-0 z-50 bg-black/80 hidden flex items-center justify-center p-4">
+            <div class="bg-surface rounded-3xl max-w-md w-full p-8 border border-gray-700 relative">
+                <button onclick="document.getElementById('hire-modal').classList.add('hidden')" class="absolute top-5 right-5 text-gray-500 hover:text-white text-xl font-black">&times;</button>
+                <h3 id="hire-modal-title" class="text-xl font-black text-white mb-6 border-b border-gray-800 pb-4">Request to Hire</h3>
+                <form onsubmit="Community.submitHireRequest(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Message</label>
+                        <textarea id="hire-message" rows="4" required class="w-full rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white outline-none" placeholder="What are you looking for help with?"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Preferred Contact</label>
+                        <select id="hire-contact-pref" class="w-full rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white outline-none appearance-none">
+                            <option value="in_app">In-app</option>
+                            <option value="email">Email</option>
+                            <option value="phone">Phone</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-primary hover:bg-primary-dark text-dark font-bold text-sm rounded-xl transition-all">Send Request</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- NEW POST MODAL -->
+        <div id="new-post-modal" class="fixed inset-0 z-50 bg-black/80 hidden flex items-center justify-center p-4">
+            <div class="bg-surface rounded-3xl max-w-lg w-full p-8 border border-gray-700 relative">
+                <button onclick="document.getElementById('new-post-modal').classList.add('hidden')" class="absolute top-5 right-5 text-gray-500 hover:text-white text-xl font-black">&times;</button>
+                <h3 class="text-xl font-black text-white mb-6 border-b border-gray-800 pb-4">Share Content</h3>
+                <form onsubmit="Community.submitNewPost(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Category</label>
+                        <select id="post-category" class="w-full rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white outline-none appearance-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Title</label>
+                        <input type="text" id="post-title" required class="w-full rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Content</label>
+                        <textarea id="post-content" rows="6" required class="w-full rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white outline-none" placeholder="Share a diet plan, workout routine, tip, or success story..."></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-primary hover:bg-primary-dark text-dark font-bold text-sm rounded-xl transition-all">Publish</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- COMPARISON VIEW -->
+        <section id="view-comparison" class="view-section hidden py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-8 border-b border-dark/10 pb-6">
+                    <h2 class="text-3xl font-black text-dark">AI Comparison</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-surface p-6 rounded-3xl border border-gray-800">
+                        <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Profile A</label>
+                        <select id="comp-select-a" onchange="app.renderComparison()" class="w-full rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white focus:border-primary outline-none appearance-none"></select>
+                    </div>
+                    <div class="bg-surface p-6 rounded-3xl border border-gray-800">
+                        <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Profile B</label>
+                        <select id="comp-select-b" onchange="app.renderComparison()" class="w-full rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-white focus:border-primary outline-none appearance-none"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="comparison-results-grid"></div>
+            </div>
+        </section>
+
+        <!-- PROGRESS VIEW -->
+        <section id="view-progress" class="view-section hidden py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-8 border-b border-dark/10 pb-6">
+                    <h2 class="text-3xl font-black text-dark">Progress Analytics</h2>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                    <div class="bg-surface p-6 rounded-3xl border border-gray-800 text-center">
+                        <h4 class="text-4xl font-black text-white mb-1" id="prog-total-workouts">0</h4>
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Sessions</p>
+                    </div>
+                    <div class="bg-surface p-6 rounded-3xl border border-gray-800 text-center">
+                        <h4 class="text-4xl font-black text-white mb-1" id="prog-streak-days">0</h4>
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Streak</p>
+                    </div>
+                    <div class="bg-surface p-6 rounded-3xl border border-gray-800 text-center">
+                        <h4 class="text-4xl font-black text-white mb-1" id="prog-activity-mins">0</h4>
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Minutes</p>
+                    </div>
+                    <div class="bg-surface p-6 rounded-3xl border border-gray-800 text-center">
+                        <h4 class="text-4xl font-black text-primary mb-1" id="prog-total-xp">0</h4>
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Total XP</p>
+                    </div>
+                </div>
+                <div class="bg-surface p-8 rounded-3xl border border-gray-800 mb-8">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+                        <h3 class="text-xl font-black text-white">Wearable Stats & Fitness Assessment</h3>
+                        <div class="flex items-center gap-2"><button onclick="Wearable.openModal()" class="px-3 py-1.5 bg-primary hover:bg-primary-dark text-dark rounded-xl text-xs font-bold transition-all"><i class="fas fa-satellite-dish mr-1"></i> Connect Wearable</button><button onclick="Wellness.syncSmartwatch()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition-all"><i class="fas fa-sync mr-1"></i> Sync Now</button></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-1 bg-dark rounded-2xl p-6 border border-gray-800 flex flex-col justify-between">
+                            <div>
+                                <p id="assess-headline" class="text-lg font-black text-white mb-1">—</p>
+                                <p id="assess-score" class="text-4xl font-black text-primary mb-4">--%</p>
+                            </div>
+                            <ul id="assess-suggestions" class="space-y-2 text-xs text-gray-400"></ul>
+                        </div>
+                        <div class="lg:col-span-2 bg-dark rounded-2xl p-6 border border-gray-800">
+                            <canvas id="wellness-trend-chart" height="120"></canvas>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 mt-6">
+                        <div class="bg-dark rounded-2xl p-4 border border-gray-800 text-center">
+                            <p class="text-2xl font-black text-white" id="assess-avg-steps">0</p>
+                            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Avg Steps / Day</p>
+                        </div>
+                        <div class="bg-dark rounded-2xl p-4 border border-gray-800 text-center">
+                            <p class="text-2xl font-black text-white" id="assess-avg-sleep">0h</p>
+                            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Avg Sleep</p>
+                        </div>
+                        <div class="bg-dark rounded-2xl p-4 border border-gray-800 text-center">
+                            <p class="text-2xl font-black text-white" id="assess-avg-water">0ml</p>
+                            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Avg Water</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-surface p-8 rounded-3xl border border-gray-800 mb-8">
+                    <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                        <h3 class="text-xl font-black text-white">Badges</h3>
+                        <span id="badges-summary" class="text-xs font-bold text-primary uppercase tracking-widest">0 / 0 unlocked</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" id="achievements-container"></div>
+                </div>
+                <div class="bg-surface p-8 rounded-3xl border border-gray-800 mb-8">
+                    <h3 class="text-xl font-black text-white mb-6 border-b border-gray-800 pb-4">Leaderboard</h3>
+                    <div id="leaderboard-container" class="space-y-3"></div>
+                </div>
+                <div class="bg-surface p-8 rounded-3xl border border-gray-800">
+                    <h3 class="text-xl font-black text-white mb-6 border-b border-gray-800 pb-4">Workout Log</h3>
+                    <div id="workout-history-table-container"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- SECTION 8: AI COACH KANG -->
+        <!-- ============================================== -->
+        <section id="view-ai-coach" class="view-section hidden py-4 h-[calc(100vh-4.5rem)]">
+            <div class="max-w-6xl mx-auto h-full px-2">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+
+                    <!-- LEFT: KANG Video -->
+                    <div class="lg:col-span-4 h-56 lg:h-full">
+                        <div class="w-full h-full bg-gray-950 rounded-3xl overflow-hidden relative border border-gray-800 shadow-2xl">
+                            <video id="kang-full-body"
+                                   src="{% static 'images/KANG.mp4' %}"
+                                   poster="{% static 'images/KANG.png' %}"
+                                   class="absolute inset-0 w-full h-full object-cover object-center select-none"
+                                   autoplay loop muted playsinline>
+                            </video>
+
+                            <!-- Status badge -->
+                            <div class="relative z-20 w-full p-4 flex items-center justify-start bg-gradient-to-b from-gray-950/90 via-gray-950/50 to-transparent">
+                                <div class="flex items-center gap-2 bg-gray-900/90 backdrop-blur-md border border-gray-800 px-3 py-1.5 rounded-full shadow-lg">
+                                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                                    <span class="kang-status-badge text-[10px] font-black uppercase tracking-widest text-emerald-400">● KANG READY</span>
+                                    <span class="text-xs text-primary font-bold ml-1" id="kang-status">Ready</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: Rectangular Chat Space -->
+                    <div class="lg:col-span-8 h-full min-h-0">
+                        <div class="w-full h-full bg-gray-950 rounded-3xl border border-gray-800 shadow-2xl flex flex-col overflow-hidden relative">
+
+                            <!-- Chat header -->
+                            <div class="flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0">
+                                <h3 class="text-sm font-black text-white flex items-center gap-2">
+                                    <i class="fas fa-robot text-primary"></i> KANG Chat
+                                </h3>
+                                <div class="flex items-center gap-1.5">
+                                    <!-- Chats dropdown toggle -->
+                                    <button onclick="app.toggleKangSessions()"
+                                        class="w-8 h-8 rounded-xl bg-gray-900 border border-gray-800 text-gray-400 hover:text-white flex items-center justify-center transition-all"
+                                        title="Previous Chats">
+                                        <i class="fas fa-history text-xs"></i>
+                                    </button>
+
+                                    <!-- New chat button -->
+                                    <button onclick="app.newKangChat()"
+                                        class="w-8 h-8 rounded-xl bg-gray-900 border border-gray-800 text-gray-400 hover:text-white flex items-center justify-center transition-all"
+                                        title="New Chat">
+                                        <i class="fas fa-plus text-xs"></i>
+                                    </button>
+
+                                    <!-- Dropdown menu for previous chats -->
+                                    <div id="kang-sessions-dropdown" class="hidden absolute top-14 right-4 w-72 max-h-80 overflow-y-auto bg-gray-900/95 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl z-30 p-2"></div>
+                                </div>
+                            </div>
+
+                            <!-- Messages -->
+                            <div id="chat-messages-container" class="flex-1 overflow-y-auto space-y-2 p-4 scrollbar-hide flex flex-col"></div>
+
+                            <!-- Bottom bar: quick prompts + input -->
+                            <div class="flex-shrink-0 px-4 pb-4 pt-2 flex flex-col gap-2.5">
+
+                                <!-- Quick Prompts Pill Bar -->
+                                <div class="flex gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-hide py-1 text-[11px]">
+                                    <button onclick="app.sendQuickPrompt('Explain how to do a perfect squat.')" class="px-3 py-1.5 bg-gray-900 border border-gray-700/80 hover:bg-gray-800 text-gray-200 rounded-xl font-bold transition-all flex items-center gap-1.5 shrink-0 hover:text-white"><i class="fas fa-dumbbell text-primary text-[10px]"></i> Form Check</button>
+                                    <button onclick="app.sendQuickPrompt('What should I eat post-workout?')" class="px-3 py-1.5 bg-gray-900 border border-gray-700/80 hover:bg-gray-800 text-gray-200 rounded-xl font-bold transition-all flex items-center gap-1.5 shrink-0 hover:text-white"><i class="fas fa-utensils text-amber-400 text-[10px]"></i> Diet Advice</button>
+                                    <button onclick="app.sendQuickPrompt('Suggest a personalized workout routine for today.')" class="px-3 py-1.5 bg-gray-900 border border-gray-700/80 hover:bg-gray-800 text-gray-200 rounded-xl font-bold transition-all flex items-center gap-1.5 shrink-0 hover:text-white"><i class="fas fa-fire text-red-400 text-[10px]"></i> Workout Plan</button>
+                                </div>
+
+                                <!-- File preview zone (hidden until file attached) -->
+                                <div id="kang-file-preview" class="hidden bg-gray-900 px-3 py-1.5 rounded-xl border border-gray-700/60"></div>
+
+                                <!-- Input Bar (text only, no live voice interaction) -->
+                                <div class="bg-gray-900 p-2 rounded-2xl border border-gray-700/80 flex items-center gap-2">
+                                    <!-- Hidden file input -->
+                                    <input type="file" id="kang-file-input"
+                                        accept="image/*,.pdf,.txt,.md,.csv,.json,.js,.py,.html,.css"
+                                        class="hidden"
+                                        onchange="Kang.handleFileAttach(this)">
+
+                                    <!-- Attach button -->
+                                    <button onclick="Kang.openFilePicker()"
+                                        type="button" aria-label="Attach file" title="Attach file (image, PDF, text)"
+                                        class="w-10 h-10 rounded-xl bg-gray-800/80 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-primary font-bold transition-all flex items-center justify-center text-sm flex-shrink-0">
+                                        <i class="fas fa-paperclip"></i>
+                                    </button>
+
+                                    <!-- Text input -->
+                                    <div class="flex-1 relative flex items-center min-w-0">
+                                        <input type="text" id="chat-user-input"
+                                            onkeydown="if(event.key==='Enter') app.sendChatMessage()"
+                                            class="w-full bg-gray-950/80 border border-gray-700/70 rounded-xl py-2.5 px-3.5 text-xs text-white placeholder-gray-500 outline-none focus:border-primary transition-all"
+                                            placeholder="Message KANG...">
+                                    </div>
+
+                                    <!-- Send button -->
+                                    <button onclick="app.sendChatMessage()" aria-label="Send message"
+                                        class="bg-primary hover:bg-primary-dark text-dark w-10 h-10 rounded-xl font-bold transition-all flex items-center justify-center text-sm flex-shrink-0">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- SECTION: THE VIBE — Real Music Platforms + Earbuds     -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section id="view-vibe" class="view-section hidden py-8">
+            <div class="max-w-7xl mx-auto px-4 space-y-6">
+
+                <!-- 1. Header Studio Banner -->
+                <div class="bg-gray-950 rounded-3xl p-6 sm:p-8 border border-gray-800 shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden text-white">
+                    <div class="absolute -top-12 -left-12 w-48 h-48 rounded-full bg-primary/10 blur-3xl pointer-events-none"></div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> LIVE STREAMING
+                            </span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Workout Music Universe</span>
+                        </div>
+                        <h2 class="text-3xl sm:text-4xl font-black text-white flex items-center gap-3">
+                            The Vibe <i class="fas fa-headphones text-primary"></i>
+                        </h2>
+                        <p class="text-xs sm:text-sm text-gray-400 mt-1 font-medium max-w-xl">
+                            Real music from your favorite platforms — Spotify, YouTube Music, JioSaavn, Gaana, Apple Music & Amazon Music — streaming directly inside EVOLV.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 2. Platform Selector Tabs -->
+                <div class="p-5 bg-gray-950 rounded-3xl border border-gray-800 shadow-xl text-white space-y-4">
+                    <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+                        <div>
+                            <h4 class="font-black text-base text-white">Music Platforms</h4>
+                            <p class="text-xs text-gray-400">Select a platform to stream real gym music inside EVOLV</p>
+                        </div>
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">In-App Streaming</span>
+                    </div>
+
+                    <!-- Search: find and play any song directly, no default playlist forced -->
+                    <div class="flex items-center gap-2">
+                        <div class="relative flex-1">
+                            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                            <input type="text" id="vibe-search-input"
+                                onkeydown="if(event.key==='Enter'){Vibe.search(this.value);}"
+                                placeholder="Search for any song, artist, or track to play…"
+                                class="w-full bg-gray-900 border border-gray-800 rounded-2xl py-2.5 pl-9 pr-3 text-xs text-white placeholder-gray-500 outline-none focus:border-primary transition-all">
+                        </div>
+                        <button onclick="Vibe.search(document.getElementById('vibe-search-input').value)"
+                            class="px-4 py-2.5 rounded-2xl text-xs font-black bg-primary text-dark hover:bg-primary-dark transition-all shrink-0">
+                            <i class="fas fa-play mr-1"></i> Search & Play
+                        </button>
+                    </div>
+
+                    <!-- Platform Tabs (rendered by JS) -->
+                    <div id="vibe-platform-tabs" class="flex flex-wrap items-center gap-2"></div>
+
+                    <!-- Genre / Workout Category Tabs -->
+                    <div class="pt-2 border-t border-gray-800/60">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Workout Vibe & Preferences</p>
+                        <div id="vibe-genre-tabs" class="flex flex-wrap items-center gap-1.5"></div>
+                    </div>
+                </div>
+
+                <!-- 3. Two Column Layout: Embedded Player + Earbuds -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                    <!-- Left (8 cols): Embedded Music Player Cabin -->
+                    <div class="lg:col-span-8">
+                        <div id="vibe-embed-player" class="p-5 bg-gray-950 rounded-3xl border border-gray-800 shadow-xl text-white">
+                            <!-- Populated by Vibe._renderEmbedPlayer() -->
+                            <div class="p-12 text-center">
+                                <i class="fas fa-circle-notch fa-spin text-3xl text-primary mb-3"></i>
+                                <p class="text-sm font-bold text-gray-400">Loading music platform…</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right (4 cols): Earbuds Station -->
+                    <div class="lg:col-span-4">
+                        <div id="vibe-earbuds-container">
+                            <!-- Populated by Vibe._renderEarbuds() -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- SECTION: NEURO-ATHLETIC READINESS -->
+        <!-- ============================================== -->
+        <section id="view-neuro" class="view-section hidden py-8">
+
+            <div class="max-w-5xl mx-auto px-4">
+                <!-- Main Header -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6 border-b border-dark/10 pb-6">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold uppercase tracking-widest text-dark/60">Performance Readiness</span>
+                            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold bg-dark/10 text-dark border border-dark/20 cursor-pointer" data-tip="Neuro-Athletic Readiness evaluates whether your central nervous system, cardiovascular system, and muscles are recovered enough for high-intensity training today.">i</span>
+                        </div>
+                        <h2 class="text-3xl sm:text-4xl font-black text-dark mt-1">Neuro-Athletic Engine</h2>
+                        <p class="text-xs sm:text-sm text-dark/60 mt-1 font-medium">Non-diagnostic performance-readiness estimate based on recovery, reaction time, and training load.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="ReactionTest.start()" class="px-4 py-2.5 bg-surface hover:bg-dark border border-gray-800 text-white text-xs font-bold rounded-xl transition flex items-center gap-2">
+                            <i class="fas fa-bolt text-primary"></i> Reaction Test
+                        </button>
+                        <button onclick="NeuroReadiness.renderCheckInForm()" class="px-4 py-2.5 bg-dark hover:bg-gray-800 text-white text-xs font-black rounded-xl transition flex items-center gap-2">
+                            <i class="fas fa-clipboard-check text-primary"></i> Check In
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Brief Educational Info Card -->
+                <div class="bg-surface border border-gray-800 rounded-2xl p-5 mb-6 flex items-start gap-3.5">
+                    <div class="w-8 h-8 rounded-xl bg-gray-800 text-white flex items-center justify-center font-bold text-sm shrink-0 border border-gray-700">i</div>
+                    <div class="text-xs text-gray-300 leading-relaxed">
+                        <span class="font-bold text-white">What is Neuro-Athletic Readiness?</span> It's a daily 0–100 score that determines if you should push for maximum performance, maintain standard training, or focus on light recovery. It uses your personal historical baseline across sleep, resting pulse, HRV, reaction speed, and workout load.
+                    </div>
+                </div>
+
+                <!-- Dynamic Content: Dashboard or Check-in form -->
+                <div id="neuro-dashboard-content">
+                    <!-- Populated dynamically by NeuroReadiness.load() -->
+                    <div class="bg-surface border border-gray-800 rounded-3xl p-12 text-center">
+                        <i class="fas fa-circle-notch fa-spin text-3xl text-primary mb-3"></i>
+                        <p class="text-sm font-bold text-gray-400">Loading Neuro Readiness Engine...</p>
+                    </div>
+                </div>
+
+                <!-- Historical Analytics & Trend Card -->
+                <div class="bg-surface border border-gray-800 rounded-3xl p-6 sm:p-8 mt-6">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6 border-b border-gray-800 pb-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-lg font-black text-white">Readiness Trend</h3>
+                                <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-black bg-gray-800 text-gray-300 border border-gray-700 cursor-pointer" data-tip="Your historical trajectory of daily readiness scores over time. Helps spot overtraining, under-recovery, or fitness peaks.">i</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                                <span>Historical readiness trajectory</span>
+                                <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[9px] font-bold bg-dark text-gray-400 border border-gray-800 cursor-pointer" data-tip="Scores above 80 indicate high recovery; below 60 suggests shifting toward active recovery and mobility.">i</span>
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-dark p-1 rounded-xl border border-gray-800">
+                            <button onclick="NeuroReadiness.loadHistory(7)" class="px-3 py-1 text-xs font-bold text-gray-400 hover:text-white rounded-lg transition focus:bg-gray-800 focus:text-white flex items-center gap-1" data-tip="View 7-day trailing readiness trend">
+                                <span>7D</span>
+                                <span class="text-[9px] opacity-60">i</span>
+                            </button>
+                            <button onclick="NeuroReadiness.loadHistory(14)" class="px-3 py-1 text-xs font-bold text-primary bg-gray-800 rounded-lg transition flex items-center gap-1" data-tip="View 14-day trailing readiness trend">
+                                <span>14D</span>
+                                <span class="text-[9px] opacity-60">i</span>
+                            </button>
+                            <button onclick="NeuroReadiness.loadHistory(30)" class="px-3 py-1 text-xs font-bold text-gray-400 hover:text-white rounded-lg transition focus:bg-gray-800 focus:text-white flex items-center gap-1" data-tip="View 30-day trailing readiness trend">
+                                <span>30D</span>
+                                <span class="text-[9px] opacity-60">i</span>
+                            </button>
+                            <button onclick="NeuroReadiness.loadHistory(90)" class="px-3 py-1 text-xs font-bold text-gray-400 hover:text-white rounded-lg transition focus:bg-gray-800 focus:text-white flex items-center gap-1" data-tip="View 90-day seasonal readiness trend">
+                                <span>90D</span>
+                                <span class="text-[9px] opacity-60">i</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="h-64 w-full">
+                        <canvas id="neuro-history-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 9: SETTINGS UI -->
+        <section id="view-settings" class="view-section hidden py-8">
+            <div class="max-w-3xl mx-auto px-4">
+                <div class="bg-surface p-8 rounded-3xl border border-gray-800 space-y-6">
+                    <h2 class="text-2xl font-black text-white mb-4 border-b border-gray-800 pb-4" data-i18n="settings_title">Settings</h2>
+
+                    <!-- Connect Device -->
+                    <div class="flex items-center justify-between p-5 bg-gray-900 rounded-xl border border-gray-800">
+                        <div>
+                            <h4 class="font-bold text-white" data-i18n="settings_connect_device">Connect Device</h4>
+                            <p class="text-xs text-gray-500 mt-1" data-i18n="settings_connect_device_sub">Smartwatches, Fitness Bands, Smartphones</p>
+                        </div>
+                        <button onclick="Wearable.openModal()" class="px-5 py-2.5 bg-gray-800 border border-gray-700 font-bold text-white text-xs rounded-lg hover:bg-gray-700 transition-all" data-i18n="settings_connect_btn">Connect</button>
+                    </div>
+
+                    <!-- Smart Alarms -->
+                    <div class="flex items-center justify-between p-5 bg-gray-900 rounded-xl border border-gray-800">
+                        <div>
+                            <h4 class="font-bold text-white" data-i18n="settings_alarms">Smart Alarms</h4>
+                            <p class="text-xs text-gray-500 mt-1" data-i18n="settings_alarms_sub">Hydration Reminders</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="alarm-toggle" class="sr-only peer" checked onchange="app.toggleAlarms(this.checked)">
+                            <div class="w-12 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-400 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+
+                    <!-- ── Language Picker ──────────────────────────────── -->
+                    <div class="p-5 bg-gray-900 rounded-xl border border-gray-800">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h4 class="font-bold text-white flex items-center gap-2">
+                                    <i class="fas fa-globe text-primary"></i>
+                                    <span data-i18n="settings_language">Language</span>
+                                </h4>
+                                <p class="text-xs text-gray-500 mt-1" data-i18n="settings_language_sub">Choose your preferred display language</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button id="lang-btn-en" onclick="I18n.setLang('en')"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all border border-gray-700 bg-primary text-dark flex flex-col items-center gap-1">
+                                <span class="text-lg">🇬🇧</span>
+                                <span class="text-xs font-black">English</span>
+                            </button>
+                            <button id="lang-btn-hi" onclick="I18n.setLang('hi')"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 flex flex-col items-center gap-1">
+                                <span class="text-lg">🇮🇳</span>
+                                <span class="text-xs font-black">हिन्दी</span>
+                            </button>
+                            <button id="lang-btn-te" onclick="I18n.setLang('te')"
+                                class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 flex flex-col items-center gap-1">
+                                <span class="text-lg">🇮🇳</span>
+                                <span class="text-xs font-black">తెలుగు</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ── Keyboard Shortcuts Reference ────────────────── -->
+                    <div class="p-5 bg-gray-900 rounded-xl border border-gray-800">
+                        <div class="flex items-center gap-3 mb-5 pb-4 border-b border-gray-800">
+                            <div class="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center">
+                                <i class="fas fa-keyboard"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white" data-i18n="settings_shortcuts">Keyboard Shortcuts</h4>
+                                <p class="text-xs text-gray-500 mt-0.5" data-i18n="settings_shortcuts_sub">All available keyboard shortcuts for EVOLV</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-5 text-sm">
+                            <!-- Navigation -->
+                            <div>
+                                <h5 class="text-[10px] font-bold text-primary uppercase tracking-widest mb-3" data-i18n="sc_nav">Navigation</h5>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_dashboard">Dashboard</span>
+                                        <div class="flex gap-1"><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">D</kbd><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">1</kbd></div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_kang">KANG AI Coach</span>
+                                        <div class="flex gap-1"><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">K</kbd><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">2</kbd></div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_neuro">Neuro Readiness</span>
+                                        <div class="flex gap-1"><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">N</kbd><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">3</kbd></div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_workouts">Workouts</span>
+                                        <div class="flex gap-1"><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">W</kbd><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">4</kbd></div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_nutrition">Nutrition</span>
+                                        <div class="flex gap-1"><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">U</kbd><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">5</kbd></div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_community">Community</span>
+                                        <div class="flex gap-1"><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">C</kbd><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">6</kbd></div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_progress">Progress</span>
+                                        <div class="flex gap-1"><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">P</kbd><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">7</kbd></div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_vibe">The Vibe</span>
+                                        <div class="flex gap-1"><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">V</kbd><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">9</kbd></div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_settings">Settings</span>
+                                        <div class="flex gap-1"><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-primary font-mono">S</kbd><kbd class="px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-bold text-gray-400 font-mono">8</kbd></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div>
+                                <h5 class="text-[10px] font-bold text-primary uppercase tracking-widest mb-3" data-i18n="sc_actions">Quick Actions</h5>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_start_workout">Start Workout</span>
+                                        <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">X</kbd>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_reaction">Start CNS Reaction Test</span>
+                                        <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">R</kbd>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_sync">Sync Smartwatch</span>
+                                        <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">Y</kbd>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_show_shortcuts">Show Shortcuts Cheat Sheet</span>
+                                        <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">?</kbd>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80 sm:col-span-2">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_close_modal">Close Any Active Modal</span>
+                                        <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">ESC</kbd>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- In-Session -->
+                            <div>
+                                <h5 class="text-[10px] font-bold text-primary uppercase tracking-widest mb-3" data-i18n="sc_session">During Active Session</h5>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_tap_react">Tap / React (Reaction Test)</span>
+                                        <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">Space / Enter</kbd>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_pause_resume">Pause / Resume Workout</span>
+                                        <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">Space</kbd>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_next_ex">Next Exercise</span>
+                                        <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">Enter / →</kbd>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2.5 bg-dark/60 rounded-xl border border-gray-800/80">
+                                        <span class="text-gray-300 font-medium text-xs" data-i18n="sc_form_fix">Form Fix Analysis</span>
+                                        <kbd class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-lg text-xs font-bold text-primary font-mono">F</kbd>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sign out / Reset -->
+                    <div class="border-t border-gray-800 pt-6 flex gap-3">
+                        <button onclick="app.logout()" class="flex-1 px-5 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold text-sm rounded-xl transition-all" data-i18n="settings_sign_out">Sign Out</button>
+                        <button onclick="app.resetAllData()" class="flex-1 px-5 py-3 bg-red-900/30 hover:bg-red-900/50 text-red-400 font-bold text-sm rounded-xl border border-red-900/50 transition-all" data-i18n="settings_reset">Reset Data</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- WEARABLE PAIRING MODAL -->
+    <div id="wearable-modal" class="fixed inset-0 z-50 bg-black/80 hidden flex items-center justify-center p-4">
+        <div class="bg-surface border border-blue-900/60 rounded-3xl max-w-lg w-full p-8 shadow-2xl relative smooth-dropdown max-h-[90vh] overflow-y-auto">
+            <button onclick="Wearable.closeModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 rounded-2xl bg-primary/20 text-primary flex items-center justify-center mx-auto mb-3 text-2xl border border-primary/30">
+                    <i class="fas fa-watch-fitness"></i>
+                </div>
+                <h3 class="text-2xl font-black text-white">Connect Your Device</h3>
+                <p class="text-xs text-slate-400 mt-1">Pair any Bluetooth wearable or smartphone to sync steps, heart rate, sleep, and more.</p>
+            </div>
+
+            <!-- Current Connected Status -->
+            <div id="wearable-current-status-box"></div>
+
+            <!-- Tabs -->
+            <div class="flex gap-2 bg-slate-900/80 p-1 rounded-xl border border-blue-900/40 mb-6">
+                <button id="wearable-tab-btn-bluetooth" onclick="Wearable.switchTab('bluetooth')" class="wearable-tab-btn flex-1 py-2.5 rounded-lg text-xs font-bold uppercase transition-all bg-primary text-dark">
+                    <i class="fab fa-bluetooth-b mr-1.5"></i> Bluetooth
+                </button>
+                <button id="wearable-tab-btn-qr" onclick="Wearable.switchTab('qr')" class="wearable-tab-btn flex-1 py-2.5 rounded-lg text-xs font-bold uppercase transition-all text-gray-400 hover:text-white">
+                    <i class="fas fa-qrcode mr-1.5"></i> QR Pairing
+                </button>
+                <button id="wearable-tab-btn-presets" onclick="Wearable.switchTab('presets')" class="wearable-tab-btn flex-1 py-2.5 rounded-lg text-xs font-bold uppercase transition-all text-gray-400 hover:text-white">
+                    <i class="fas fa-laptop-medical mr-1.5"></i> Select Model
+                </button>
+            </div>
+
+            <!-- Bluetooth Tab -->
+            <div id="wearable-tab-bluetooth" class="wearable-tab-pane space-y-5">
+                <div class="bg-dark/80 border border-blue-900/40 p-6 rounded-2xl text-center">
+                    <div id="bt-spinner" class="hidden mb-3">
+                        <i class="fas fa-spinner fa-spin text-3xl text-primary"></i>
+                    </div>
+                    <div id="bt-live-reading" class="hidden mb-4">
+                        <p class="text-5xl font-black text-red-400"><i class="fas fa-heart-pulse text-3xl align-middle mr-2"></i><span id="bt-live-bpm">--</span></p>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Live BPM from device</p>
+                    </div>
+                    <p id="bt-status-text" class="text-sm font-bold text-slate-200 mb-4">Click below to search for nearby Bluetooth devices — smartwatches, fitness bands, and smartphones.</p>
+                    <button id="bt-connect-btn" onclick="Wearable.scanBluetooth()" class="w-full py-3.5 bg-primary hover:bg-primary-dark text-dark font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i class="fab fa-bluetooth text-lg"></i> Scan & Connect Device
+                    </button>
+                </div>
+                <p class="text-[11px] text-slate-500 text-center">Connects to any nearby Bluetooth device — smartwatches, fitness bands, and smartphones. If your device supports live heart-rate over BLE, it will stream automatically. For steps, sleep, and water data, enter them under "Select Model" from your device's own app.</p>
+            </div>
+
+            <!-- QR Code Tab -->
+            <div id="wearable-tab-qr" class="wearable-tab-pane hidden text-center space-y-4">
+                <div id="wearable-qr-code" class="py-2"></div>
+                <button onclick="Wearable.generateQRCode()" class="text-xs text-slate-500 hover:text-white font-bold">
+                    <i class="fas fa-rotate mr-1.5"></i> Regenerate QR code
+                </button>
+            </div>
+
+            <!-- Select Model / Manual Sync Tab -->
+            <div id="wearable-tab-presets" class="wearable-tab-pane hidden space-y-4">
+                <p class="text-xs text-slate-400">Pick your device and enter your data — works for smartwatches, fitness bands, and smartphones. This logs your real numbers into the dashboard.</p>
+                <div>
+                    <label class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Device</label>
+                    <select id="manual-device-select" class="w-full mt-1 bg-dark/80 border border-blue-900/40 text-white text-sm rounded-xl px-3 py-2.5 outline-none">
+                        <option>Apple Watch Series / Ultra</option>
+                        <option>Fitbit Charge / Sense</option>
+                        <option>Garmin Forerunner / Venu</option>
+                        <option>Samsung Galaxy Watch</option>
+                        <option>Mi Band / Amazfit</option>
+                        <option>Noise / Boat Smartwatch</option>
+                        <option>iPhone (Health App)</option>
+                        <option>Android Phone (Google Fit / Samsung Health)</option>
+                        <option>Other Device</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Steps</label>
+                        <input type="number" min="0" id="manual-steps-input" placeholder="8500" class="w-full mt-1 bg-dark/80 border border-blue-900/40 text-white text-sm rounded-xl px-3 py-2.5 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Sleep (hrs)</label>
+                        <input type="number" min="0" step="0.1" id="manual-sleep-input" placeholder="7.5" class="w-full mt-1 bg-dark/80 border border-blue-900/40 text-white text-sm rounded-xl px-3 py-2.5 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Water (ml)</label>
+                        <input type="number" min="0" id="manual-water-input" placeholder="2000" class="w-full mt-1 bg-dark/80 border border-blue-900/40 text-white text-sm rounded-xl px-3 py-2.5 outline-none">
+                    </div>
+                </div>
+                <button onclick="Wearable.saveManualSync()" class="w-full py-3.5 bg-primary hover:bg-primary-dark text-dark font-bold rounded-xl transition-all">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i> Save Today's Data
+                </button>
+            </div>
+        </div>
+    </div>
+    </main>
+    <script src="{% static 'js/api.js' %}?v=15.0"></script>
+    <script src="{% static 'js/ui.js' %}?v=15.0"></script>
+    <script src="{% static 'js/auth.js' %}?v=15.0"></script>
+    <script src="{% static 'js/dashboard.js' %}?v=15.0"></script>
+    <script src="{% static 'js/workouts.js' %}?v=15.0"></script>
+    <script src="{% static 'js/hollowman.js' %}?v=23.0"></script>
+    <script src="{% static 'js/nutrition.js' %}?v=15.0"></script>
+    <script src="{% static 'js/community.js' %}?v=15.0"></script>
+    <script src="{% static 'js/progress.js' %}?v=15.0"></script>
+    <script src="{% static 'js/wearable.js' %}?v=15.0"></script>
+    <script src="{% static 'js/wellness.js' %}?v=15.0"></script>
+    <script src="{% static 'js/neuro.js' %}?v=15.0"></script>
+    <script src="{% static 'js/kang.js' %}?v=22.0"></script>
+    <script src="{% static 'js/form_corrector.js' %}?v=15.0"></script>
+    <script src="{% static 'js/demo-data.js' %}?v=15.0"></script>
+    <script src="{% static 'js/kang_anim.js' %}?v=15.0"></script>
+    <script src="{% static 'js/vibe.js' %}?v=1.0"></script>
+    <script src="{% static 'js/app.js' %}?v=15.0"></script>
+    <script src="{% static 'js/shortcuts.js' %}?v=15.0"></script>
+    <script src="{% static 'js/i18n.js' %}?v=1.0"></script>
+</body>
+</html>
+
+

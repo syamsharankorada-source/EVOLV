@@ -1,0 +1,130 @@
+﻿Exercises,Age_Group,Goal,Level,Equipment,Duration_min,Impact,Muscle_group,Restrictions
+Walking,All,General Fitness,Beginner,None,20,Low,Full Body,None
+Marching in Place,All,General Fitness,Beginner,None,10,Low,Full Body,None
+Bodyweight Squat,"Teen, Adult",Strength,Beginner,None,10,Medium,Legs,Knee limitations
+Wall Push-up,"Teen, Adult",Strength,Beginner,Wall,10,Low,Chest,Shoulder/wrist limitations
+Glute Bridge,"Teen, Adult",Strength,Beginner,None,10,Low,Glutes,Back limitations
+Standing Calf Raise,"Adult, Senior",Mobility,Beginner,None,10,Low,Calves,Balance limitations
+Chair Sit-to-Stand,Senior,Mobility,Beginner,Chair,10,Low,Legs,Knee limitations
+Gentle Mobility Routine,"Adult, Senior",Mobility,Beginner,None,10,Low,Full Body,Pain/injury
+Plank,"Teen, Adult",Core,Beginner,None,5,Medium,Core,Back limitations
+Step-up,"Teen, Adult",Strength,Beginner,Step,10,Medium,Legs,Knee/balance limitations
+Cycling,"Teen, Adult",General Fitness,Beginner,Bicycle,20,Medium,Legs,Balance/joint limitations
+Jumping Jacks,"Teen, Adult",Endurance,Beginner,None,5,High,Full Body,Joint limitations
+High Knees,"Teen, Adult",Endurance,Beginner,None,5,High,Legs,Joint limitations
+Lunges,"Teen, Adult",Strength,Beginner,None,10,Medium,Legs,Knee/balance limitations
+Bird Dog,"Adult, Senior",Core,Beginner,None,10,Low,Core,Balance limitations
+Heel-to-Toe Walk,Senior,Mobility,Beginner,None,10,Low,Legs,Balance limitations
+Arm Circles,All,Flexibility,Beginner,None,5,Low,Shoulders,Shoulder pain
+Neck Mobility,"Adult, Senior",Mobility,Beginner,None,5,Low,Neck,Pain/injury
+Side Leg Raise,"Adult, Senior",Mobility,Beginner,Chair,10,Low,Hips,Balance/hip limitations
+Wall Sit,"Teen, Adult",Strength,Beginner,Wall,5,Medium,Legs,Knee limitations
+Knee Push-up,"Teen, Adult",Strength,Beginner,None,10,Low,Chest,Wrist limitations
+Incline Push-up,"Teen, Adult",Strength,Beginner,Bench,10,Low,Chest,Wrist limitations
+Standing Dumbbell Bicep Curl,"Teen, Adult",Strength,Beginner,Dumbbell,10,Low,Biceps,Wrist limitations
+Seated Dumbbell Shoulder Press,Adult,Strength,Beginner,Dumbbell,10,Medium,Shoulders,Shoulder limitations
+Overhead Triceps Extension,Adult,Strength,Beginner,Dumbbell,10,Low,Triceps,Shoulder/elbow limitations
+Standing Lateral Raise,Adult,Strength,Beginner,Dumbbell,10,Low,Shoulders,Shoulder limitations
+Assisted Squat,Senior,Mobility,Beginner,Chair,10,Low,Legs,Knee limitations
+Toe Touches,"Teen, Adult",Flexibility,Beginner,None,5,Low,Core,Back limitations
+Superman Hold,"Teen, Adult",Core,Beginner,None,5,Low,Back,Back limitations
+Dead Bug,"Teen, Adult",Core,Beginner,None,10,Low,Core,Back limitations
+Standing Hip Abduction,"Adult, Senior",Mobility,Beginner,None,10,Low,Hips,Hip limitations
+Ankle Circles,All,Mobility,Beginner,None,5,Low,Calves,None
+Cat-Cow Stretch,All,Flexibility,Beginner,None,5,Low,Back,None
+Child's Pose,All,Flexibility,Beginner,None,5,Low,Back,Knee limitations
+Seated Forward Bend,All,Flexibility,Beginner,None,5,Low,Full Body,Back limitations
+Wall Angels,"Teen, Adult",Mobility,Beginner,Wall,5,Low,Shoulders,Shoulder limitations
+Box Step-up,"Teen, Adult",Strength,Beginner,Step,10,Medium,Legs,Knee/balance limitations
+Resistance Band Pull-Apart,"Teen, Adult",Strength,Beginner,Resistance Band,10,Low,Shoulders,Shoulder limitations
+Farmer's Carry Light,Adult,Strength,Beginner,Dumbbell,10,Medium,Full Body,Grip/back limitations
+Bodyweight Good Morning,"Teen, Adult",Strength,Beginner,None,10,Low,Back,Back limitations
+Side Plank Knee Down,"Teen, Adult",Core,Beginner,None,5,Low,Core,Shoulder limitations
+Push-up,"Teen, Adult",Strength,Intermediate,None,10,Medium,Chest,Wrist/shoulder limitations
+Diamond Push-up,Adult,Strength,Intermediate,None,10,Medium,Triceps,Wrist limitations
+Pike Push-up,Adult,Strength,Intermediate,None,10,Medium,Shoulders,Shoulder/wrist limitations
+Mountain Climbers,"Teen, Adult",Endurance,Intermediate,None,10,High,Core,Wrist/knee limitations
+Burpees,"Teen, Adult",Endurance,Intermediate,None,10,High,Full Body,Knee/back limitations
+Bulgarian Split Squat,Adult,Strength,Intermediate,Bench,10,Medium,Legs,Knee/balance limitations
+Goblet Squat,Adult,Strength,Intermediate,Dumbbell,10,Medium,Legs,Knee limitations
+Dumbbell Deadlift,Adult,Strength,Intermediate,Dumbbell,10,Medium,Back,Back limitations
+Dumbbell Romanian Deadlift,Adult,Strength,Intermediate,Dumbbell,10,Medium,Back,Back limitations
+Bent-over Dumbbell Row,Adult,Strength,Intermediate,Dumbbell,10,Medium,Back,Back limitations
+Dumbbell Bench Press,Adult,Strength,Intermediate,Dumbbell,10,Medium,Chest,Shoulder limitations
+Dumbbell Chest Fly,Adult,Strength,Intermediate,Dumbbell,10,Low,Chest,Shoulder limitations
+Dumbbell Shoulder Press,Adult,Strength,Intermediate,Dumbbell,10,Medium,Shoulders,Shoulder limitations
+Dumbbell Lunges,Adult,Strength,Intermediate,Dumbbell,10,Medium,Legs,Knee/balance limitations
+Dumbbell Step-up,Adult,Strength,Intermediate,Dumbbell,10,Medium,Legs,Knee/balance limitations
+Kettlebell Swing,Adult,Strength,Intermediate,Kettlebell,10,High,Glutes,Back limitations
+Kettlebell Goblet Squat,Adult,Strength,Intermediate,Kettlebell,10,Medium,Legs,Knee limitations
+Resistance Band Squat,Adult,Strength,Intermediate,Resistance Band,10,Medium,Legs,Knee limitations
+Resistance Band Row,Adult,Strength,Intermediate,Resistance Band,10,Low,Back,Back limitations
+Resistance Band Chest Press,Adult,Strength,Intermediate,Resistance Band,10,Low,Chest,Shoulder limitations
+Barbell Back Squat,Adult,Strength,Intermediate,Barbell,15,High,Legs,Knee/back limitations
+Barbell Deadlift,Adult,Strength,Intermediate,Barbell,15,High,Back,Back limitations
+Barbell Bench Press,Adult,Strength,Intermediate,Barbell,15,Medium,Chest,Shoulder limitations
+Barbell Bent-over Row,Adult,Strength,Intermediate,Barbell,15,Medium,Back,Back limitations
+Barbell Overhead Press,Adult,Strength,Intermediate,Barbell,10,Medium,Shoulders,Shoulder limitations
+Pull-up,Adult,Strength,Intermediate,Pull-up Bar,10,High,Back,Shoulder limitations
+Chin-up,Adult,Strength,Intermediate,Pull-up Bar,10,High,Biceps,Shoulder limitations
+Inverted Row,Adult,Strength,Intermediate,Pull-up Bar,10,Medium,Back,Shoulder limitations
+Jump Squat,"Teen, Adult",Endurance,Intermediate,None,10,High,Legs,Knee/joint limitations
+Jump Lunge,"Teen, Adult",Endurance,Intermediate,None,10,High,Legs,Knee/joint limitations
+Box Jump,"Teen, Adult",Endurance,Intermediate,Step,10,High,Legs,Knee/joint limitations
+Russian Twist,"Teen, Adult",Core,Intermediate,None,10,Medium,Core,Back limitations
+Bicycle Crunch,"Teen, Adult",Core,Intermediate,None,10,Medium,Abs,Neck limitations
+Flutter Kicks,"Teen, Adult",Core,Intermediate,None,5,Medium,Abs,Back limitations
+V-Ups,Adult,Core,Intermediate,None,10,Medium,Abs,Back limitations
+Hollow Body Hold,Adult,Core,Intermediate,None,5,Medium,Abs,Back limitations
+Side Plank,"Teen, Adult",Core,Intermediate,None,5,Medium,Core,Shoulder limitations
+Plank Shoulder Taps,"Teen, Adult",Core,Intermediate,None,5,Medium,Core,Wrist limitations
+Reverse Lunge,"Teen, Adult",Strength,Intermediate,None,10,Medium,Legs,Knee/balance limitations
+Curtsy Lunge,Adult,Strength,Intermediate,None,10,Medium,Glutes,Knee/balance limitations
+Single-Leg Glute Bridge,Adult,Strength,Intermediate,None,10,Medium,Glutes,Back limitations
+Weighted Calf Raise,Adult,Strength,Intermediate,Dumbbell,10,Low,Calves,Balance limitations
+Tricep Dips,Adult,Strength,Intermediate,Bench,10,Medium,Triceps,Shoulder/wrist limitations
+Skull Crushers,Adult,Strength,Intermediate,Dumbbell,10,Medium,Triceps,Elbow limitations
+Hammer Curl,Adult,Strength,Intermediate,Dumbbell,10,Low,Biceps,Wrist limitations
+Front Raise,Adult,Strength,Intermediate,Dumbbell,10,Low,Shoulders,Shoulder limitations
+Face Pull,Adult,Strength,Intermediate,Resistance Band,10,Low,Shoulders,Shoulder limitations
+Stationary Bike Sprint,"Teen, Adult",Endurance,Intermediate,Bicycle,15,High,Legs,Joint limitations
+Jump Rope,"Teen, Adult",Endurance,Intermediate,Jump Rope,10,High,Full Body,Joint/ankle limitations
+Shadow Boxing,"Teen, Adult",Endurance,Intermediate,None,10,Medium,Full Body,Shoulder limitations
+Sumo Squat,Adult,Strength,Intermediate,Dumbbell,10,Medium,Legs,Knee/hip limitations
+Weighted Wall Sit,Adult,Strength,Intermediate,Dumbbell,5,Medium,Legs,Knee limitations
+Renegade Row,Adult,Strength,Intermediate,Dumbbell,10,High,Back,Wrist/shoulder limitations
+Kettlebell Deadlift,Adult,Strength,Intermediate,Kettlebell,10,Medium,Back,Back limitations
+Kettlebell Row,Adult,Strength,Intermediate,Kettlebell,10,Medium,Back,Back limitations
+Standing Oblique Crunch,Adult,Core,Intermediate,None,10,Low,Abs,Back limitations
+Superman Row,Adult,Strength,Intermediate,Dumbbell,10,Medium,Back,Back limitations
+Lateral Band Walk,Adult,Strength,Intermediate,Resistance Band,10,Medium,Hips,Hip/knee limitations
+Pistol Squat,Adult,Strength,Advanced,None,10,High,Legs,Knee/balance limitations
+One-Arm Push-up,Adult,Strength,Advanced,None,10,High,Chest,Wrist/shoulder limitations
+Muscle-up,Adult,Strength,Advanced,Pull-up Bar,10,High,Back,Shoulder limitations
+Weighted Pull-up,Adult,Strength,Advanced,Pull-up Bar,10,High,Back,Shoulder limitations
+Barbell Front Squat,Adult,Strength,Advanced,Barbell,15,High,Legs,Knee/back limitations
+Barbell Sumo Deadlift,Adult,Strength,Advanced,Barbell,15,High,Back,Back limitations
+Barbell Clean and Press,Adult,Strength,Advanced,Barbell,15,High,Full Body,Back/shoulder limitations
+Weighted Dip,Adult,Strength,Advanced,Bench,10,High,Triceps,Shoulder limitations
+Handstand Push-up,Adult,Strength,Advanced,Wall,10,High,Shoulders,Neck/wrist limitations
+Archer Push-up,Adult,Strength,Advanced,None,10,High,Chest,Wrist/shoulder limitations
+Plyo Push-up,Adult,Strength,Advanced,None,10,High,Chest,Wrist/shoulder limitations
+High Box Jump,Adult,Endurance,Advanced,Step,10,High,Legs,Knee/joint limitations
+Depth Jump,Adult,Endurance,Advanced,Step,10,High,Legs,Knee/joint limitations
+Barbell Hip Thrust,Adult,Strength,Advanced,Barbell,10,Medium,Glutes,Back/hip limitations
+Kettlebell Snatch,Adult,Strength,Advanced,Kettlebell,10,High,Full Body,Shoulder/back limitations
+Kettlebell Clean,Adult,Strength,Advanced,Kettlebell,10,High,Full Body,Shoulder/back limitations
+Turkish Get-up,Adult,Strength,Advanced,Kettlebell,15,Medium,Full Body,Shoulder limitations
+Weighted Russian Twist,Adult,Core,Advanced,Dumbbell,10,Medium,Abs,Back limitations
+Dragon Flag,Adult,Core,Advanced,Bench,10,High,Abs,Back limitations
+L-Sit,Adult,Core,Advanced,None,5,Medium,Abs,Wrist/shoulder limitations
+Weighted Step-up,Adult,Strength,Advanced,Dumbbell,10,Medium,Legs,Knee/balance limitations
+Barbell Walking Lunges,Adult,Strength,Advanced,Barbell,15,High,Legs,Knee/balance limitations
+Overhead Squat,Adult,Strength,Advanced,Barbell,15,High,Full Body,Shoulder/back limitations
+Deficit Push-up,Adult,Strength,Advanced,Bench,10,High,Chest,Wrist/shoulder limitations
+Barbell Push Press,Adult,Strength,Advanced,Barbell,10,High,Shoulders,Shoulder limitations
+Single-Arm Kettlebell Press,Adult,Strength,Advanced,Kettlebell,10,Medium,Shoulders,Shoulder limitations
+Weighted Pistol Squat,Adult,Strength,Advanced,Dumbbell,10,High,Legs,Knee/balance limitations
+Sprint Intervals,"Teen, Adult",Endurance,Advanced,None,15,High,Legs,Joint limitations
+Battle Rope Slams,Adult,Endurance,Advanced,Battle Ropes,10,High,Full Body,Shoulder/back limitations
+Tuck Front Lever Hold,Adult,Core,Advanced,Pull-up Bar,5,High,Back,Shoulder limitations

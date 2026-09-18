@@ -1,0 +1,18 @@
+﻿Food,Health_condition,Recommendation,Reason
+Oats,Diabetes,Yes,High fiber and relatively slow digestion
+Brown Rice,Diabetes,Yes,Better fiber content than white rice
+Vegetable Salad,Diabetes,Yes,Low calorie and high in vegetables
+Apple,Diabetes,Yes,Fiber-rich fruit in moderate portion
+White Rice,Diabetes,No,High carbohydrate load
+Sugary Drinks,Diabetes,No,High added sugar
+Oats,High Cholesterol,Yes,Contains soluble fiber
+Almonds,High Cholesterol,Yes,Provides unsaturated fats
+Vegetable Salad,High Cholesterol,Yes,High in vegetables and fiber
+Fried Foods,High Cholesterol,No,Usually high in saturated/trans fats
+Paneer,High Cholesterol,Limit,Can be high in saturated fat
+Curd,High Cholesterol,Yes,Can provide protein and calcium
+Oats,High Blood Pressure,Yes,Whole grain option with fiber
+Banana,High Blood Pressure,Yes,Provides potassium
+Vegetable Salad,High Blood Pressure,Yes,Vegetable-rich option
+Very Salty Foods,High Blood Pressure,No,High sodium intake can worsen blood pressure
+Pickles,High Blood Pressure,Limit,Can contain high sodium

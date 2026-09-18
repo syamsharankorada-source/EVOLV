@@ -1,0 +1,30 @@
+﻿Food,Meal_Type,Diet_type,Goal,Protien_g,Calories,Carbs_g,Fat_g
+Oats,Breakfast,Veg,Weight Loss,16.9,389,66.3,6.9
+Idli,Breakfast,Veg,Weight Loss,6.7,146,28.2,1.5
+Dosa,Breakfast,Veg,Muscle Gain,4.5,168,29,3.7
+Upma,Breakfast,Veg,Weight Loss,4,150,25,4
+Poha,Breakfast,Veg,Weight Loss,2.6,180,28,5
+Paneer,Breakfast,Veg,Muscle Gain,18.3,265,1.2,20.8
+Boiled Eggs,Breakfast,Eggetarian,Muscle Gain,13,155,1.1,11
+Milk,Breakfast,Veg,Muscle Gain,3.2,61,4.8,3.3
+Curd,Lunch,Veg,Weight Loss,3.5,61,4.7,3.3
+Rice,Lunch,Veg,Muscle Gain,2.7,130,28,0.3
+Dal,Lunch,Veg,Muscle Gain,9,116,20,0.4
+Roti,Lunch,Veg,Weight Loss,11,297,56,4
+Paneer Curry,Lunch,Veg,Muscle Gain,14,250,8,18
+Chickpeas,Lunch,Veg,Weight Loss,8.9,164,27.4,2.6
+Vegetable Salad,Lunch,Veg,Weight Loss,2,50,10,0.5
+Brown Rice,Lunch,Veg,Weight Loss,2.6,123,25.6,1
+Curd Rice,Lunch,Veg,Weight Loss,3.5,150,25,3
+Banana,Snack,Veg,Muscle Gain,1.1,89,22.8,0.3
+Apple,Snack,Veg,Weight Loss,0.3,52,14,0.2
+Peanuts,Snack,Veg,Muscle Gain,25.8,567,16.1,49.2
+Almonds,Snack,Veg,Muscle Gain,21.2,579,21.6,49.9
+Greek Yogurt,Snack,Veg,Muscle Gain,10,73,3.9,0.4
+Sprouts,Snack,Veg,Weight Loss,4,80,14,1
+Roasted Chickpeas,Snack,Veg,Weight Loss,19,364,61,6
+Vegetable Soup,Dinner,Veg,Weight Loss,2,45,8,0.5
+Paneer Roti,Dinner,Veg,Muscle Gain,15,320,35,12
+Dal Roti,Dinner,Veg,Weight Loss,10,280,45,5
+Khichdi,Dinner,Veg,Weight Loss,7,150,25,3
+Tofu,Dinner,Veg,Muscle Gain,17.3,144,2.8,8.7
