@@ -100,7 +100,7 @@ class KangOrchestrator:
 
             # 5. Resilient Groq API Call with multi-model fallback
             chat_model = getattr(settings, 'GROQ_MODEL', None) or os.getenv('GROQ_MODEL', 'qwen/qwen3.8-27b')
-            candidates = [chat_model, 'qwen/qwen3.8-27b', 'qwen/qwen3.6-27b', 'groq/compound']
+            candidates = [chat_model, 'qwen/qwen3.8-27b', 'qwen/qwen3.6-27b']
             models_to_try = []
             for m in candidates:
                 if m and m not in models_to_try:
